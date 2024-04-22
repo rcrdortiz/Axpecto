@@ -2,6 +2,7 @@
     "name": "rcrdortiz/axpecto",
     "description": "PHP components for building modern development frameworks easily.",
     "type": "library",
+    "version": "1.0.0",
     "require": {
         "php": ">=8.1"
     },
