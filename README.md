@@ -17,7 +17,7 @@ Axpecto is a magically versatile PHP library that brings the power of aspect-ori
 You can install the library via Composer. Run the following command:
 
 ```
-composer require rcrd/axpecto
+composer require rcrdortiz/axpecto
 ```
 
 ## Usage
@@ -49,19 +49,19 @@ $app = $container->get( Application::class );
 ```
 
 And that's it. You can now start using the container to manage your object dependencies.
-By default the container will auto-wire your objects, but you can also define your services, parameters and bind concrete classes to interfaces.
+By default the container will auto-wire your objects so you don't have to do anything, but you can also define your services, parameters and bind concrete classes to interfaces manually.
 
 ````
 $container = new Container();
  
 // Bind interface example
-$this->container->addImplementation( CacheInterface::class, InMemoryCache::class );
+$container->addImplementation( CacheInterface::class, InMemoryCache::class );
 
 // Bind service example
-$this->container->addClassInstance( CacheInterface::class, new CustomCache( 'value1', 'valueN' ) );
+$container->addClassInstance( CacheInterface::class, new CustomCache( 'value1', 'valueN' ) );
 
 // Bind parameter example
-$this->container->addValue( 'cache_ttl', 3600 );
+$container->addValue( 'cache_ttl', 3600 );
 ````
 
 ### Improved Collections

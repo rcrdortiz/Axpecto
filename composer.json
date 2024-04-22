@@ -1,5 +1,5 @@
 {
-    "name": "rcrdortiz/enxp",
+    "name": "rcrdortiz/axpecto",
     "description": "PHP components for building modern development frameworks easily.",
     "type": "library",
     "require": {
