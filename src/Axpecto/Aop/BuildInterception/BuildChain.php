@@ -13,15 +13,24 @@ class BuildChain {
 	public function __construct(
 		protected Klist $annotations,
 		protected string $class,
+		protected ?string $method = null,
+		protected BuildOutput $output = new BuildOutput(),
 	) {
 	}
 
-	public function proceed(): ?string {
+	// We need to merge output instead of replacing it with the last output you dork.
+	public function proceed( ?BuildOutput $newOutput = null ): BuildOutput {
+		$this->output = $newOutput ?? $this->output;
+
 		/** @var BuildAnnotation $annotation */
 		$annotation = $this->annotations->nextElement();
 		/** @var BuildAnnotationHandler $builder */
 		$builder = $annotation?->getBuilder();
 
-		return $builder?->intercept( $this, $annotation, $this->class );
+		if ( $builder ) {
+			return $builder->intercept( $this, $annotation, $this->class, $this->method, $this->output );
+		}
+
+		return $this->output;
 	}
 }

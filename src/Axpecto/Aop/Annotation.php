@@ -6,7 +6,7 @@ use Attribute;
 
 #[Attribute] abstract class Annotation {
 
-	private ?AnnotationHandler $handler = null;
+	protected ?AnnotationHandler $handler = null;
 
 	public function __construct(
 		public readonly ?string $handlerClass = null,

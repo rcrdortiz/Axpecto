@@ -98,6 +98,12 @@ class MutableKlist extends Mutable {
 		return $this;
 	}
 
+	public function mergeList( Klist $list ): MutableKlist {
+		$this->array = array_merge( $list->toArray(), $this->toArray() );
+
+		return $this;
+	}
+
 	public function add( mixed $element ) {
 		$this->array[] = $element;
 
@@ -123,6 +129,10 @@ class MutableKlist extends Mutable {
 	}
 
 	public function as_read_only(): Klist {
+		return new Klist( $this->toArray() );
+	}
+
+	public function toImmutable() {
 		return new Klist( $this->toArray() );
 	}
 }

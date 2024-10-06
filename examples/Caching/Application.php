@@ -15,7 +15,7 @@ class Application {
 
 	public function __construct( private readonly Container $container ) {
 		// We bind the CacheInterface to the InMemoryCache implementation.
-		$this->container->addImplementation( CacheInterface::class, InMemoryCache::class );
+		$this->container->bind( CacheInterface::class, InMemoryCache::class );
 	}
 
 	#[Cache( ttl: 10 )]

@@ -26,6 +26,8 @@ class MethodExecutionInterceptor {
 			->filter( $this->hasAnnotationHandler( ... ) )
 			->map( $this->bindAnnotationHandler( ... ) );
 
+		$arguments = $this->reflect->getMethodArguments( $class, $method, $arguments );
+
 		$context = new MethodExecutionContext( $class, $method, $methodCall, $arguments );
 		$chain   = new MethodExecutionChain( $context, $annotations );
 

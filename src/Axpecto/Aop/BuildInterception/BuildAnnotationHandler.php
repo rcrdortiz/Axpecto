@@ -3,5 +3,11 @@
 namespace Axpecto\Aop\BuildInterception;
 
 interface BuildAnnotationHandler {
-	public function intercept( BuildChain $chain, BuildAnnotation $annotation, string $class ): ?string;
+	public function intercept(
+		BuildChain $chain,
+		BuildAnnotation $annotation,
+		string $class,
+		?string $method,
+		BuildOutput $output
+	): BuildOutput;
 }

@@ -11,6 +11,10 @@ class Klist extends Immutable {
 		return new static( $this->toFlatArray() );
 	}
 
+	public function toFlatMap(): Kmap {
+		return new Kmap( $this->toFlatArray() );
+	}
+
 	/**
 	 * @TODO This should be to flat map, I just need this to preserve keys when flatting out.
 	 */
@@ -73,29 +77,35 @@ class Klist extends Immutable {
 		return false;
 	}
 
+	public function maybe( Closure $predicate ): void {
+		count( $this ) > 0 && $predicate( $this );
+	}
+
+	public function all( Closure $predicate ): bool {
+		foreach ( $this->toArray() as $element ) {
+			if ( ! $predicate( $element ) ) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 	public function isNotEmpty(): bool {
 		return count( $this ) > 0;
 	}
 
-	public function isEmpty(): bool {
-		return count( $this ) === 0;
-	}
+	public function mapOf( Closure $transform ): KMap {
+		$data = array();
+		foreach ( $this->array as $value ) {
+			$entry = $transform( $value );
 
-	/*
-	public function group_by( Closure $key_selector, ?Closure $value_transform = null ): KList {
-		$grouped_data = [];
-		$data         = $this->>array;
-		foreach ( $data as $key => $value ) {
-			if ( $value_transform ) {
-				$value = $value_transform( $value );
-			}
-
-			$grouped_data[ $key_selector( $key, $value ) ][] = $value;
+			$data[ key( $entry ) ] = current( $entry );
 		}
 
-		return mapOf( ...$grouped_data );
+		return mapOf( $data );
 	}
-	*/
+
 
 	public function filterNotNull(): static {
 		return $this->filter( fn( $element ) => $element );

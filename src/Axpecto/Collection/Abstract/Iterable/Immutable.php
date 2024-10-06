@@ -15,7 +15,7 @@ abstract class Immutable implements ArrayAccess, Countable, Iterator, JsonSerial
 	public readonly int $size;
 
 	public function __construct(
-		protected array $array,
+		protected array $array = [],
 		protected int $index = 0,
 	) {
 		$this->size = $this->count();
@@ -63,12 +63,36 @@ abstract class Immutable implements ArrayAccess, Countable, Iterator, JsonSerial
 		return isset( $this->array[ $offset ] );
 	}
 
+	public function ifNotEmpty( Closure $block): static {
+		if ( $this->array ) {
+			$block( $this->array );
+		}
+
+		return $this;
+	}
+
+	public function ifEmpty( Closure $block): static {
+		if ( ! $this->array ) {
+			$block( $this->array );
+		}
+
+		return $this;
+	}
+
 	public function offsetGet( $offset ): mixed {
 		return $this->array[ $offset ];
 	}
 
 	public function count(): int {
 		return count( $this->array );
+	}
+
+	public function isEmpty(): bool {
+		return count( $this ) === 0;
+	}
+
+	public function isNotEmpty(): bool {
+		return count( $this ) > 0;
 	}
 
 	public function jsonSerialize(): string {
@@ -83,7 +107,11 @@ abstract class Immutable implements ArrayAccess, Countable, Iterator, JsonSerial
 
 	public abstract function filterNotNull(): static;
 
-	public function toMap( Closure $transform ): Kmap {
+	public function reduce( Closure $reducer, mixed $initial = null ): mixed {
+		return array_reduce( $this->toArray(), $reducer, $initial );
+	}
+
+	public function mapOf( Closure $transform ): Kmap {
 		$map = [];
 		foreach ( $this->toArray() as $item ) {
 			$item = $transform( $item );
@@ -95,6 +123,6 @@ abstract class Immutable implements ArrayAccess, Countable, Iterator, JsonSerial
 			$map[ $key ] = $value;
 		}
 
-		return map_of( $map );
+		return mapOf( $map );
 	}
 }

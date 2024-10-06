@@ -61,11 +61,10 @@ class FileSystemClassLoader {
 	}
 
 	public function loadClass( string $class_name ): bool {
-		$parts = explode( '\\', str_replace( '_', '-', $class_name ) );
+		$parts = explode( '\\', $class_name );
 		if ( count( $parts ) < 2 ) {
 			return false;
 		}
-
 		$class     = array_pop( $parts );
 		$namespace = array_shift( $parts );
 
@@ -75,11 +74,16 @@ class FileSystemClassLoader {
 		}
 
 		$file_path = $base_path . join( '/', $parts );
+		$wp_class  = $class = str_replace( '_', '-', $class );
 		$files     = [
 			$file_path . "/$class.php",
 			$file_path . "/class-$class.php",
 			$file_path . "/interface-$class.php",
 			$file_path . "/trait-$class.php",
+			$file_path . "/$wp_class.php",
+			$file_path . "/class-$wp_class.php",
+			$file_path . "/interface-$wp_class.php",
+			$file_path . "/trait-$wp_class.php",
 		];
 
 		foreach ( $files as $file ) {

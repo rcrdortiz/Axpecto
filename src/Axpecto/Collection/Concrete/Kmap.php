@@ -23,7 +23,7 @@ class Kmap extends Immutable {
 		return $this->array[ $this->keys[ $this->index ] ];
 	}
 
-	public function has( string $key ) {
+	public function has( string $key ): bool {
 		return isset( $this->array[ $key ] );
 	}
 
@@ -60,6 +60,17 @@ class Kmap extends Immutable {
 		return new static( $data );
 	}
 
+	public function mapOf( Closure $transform ): KMap {
+		$data = array();
+		foreach ( $this->array as $key => $value ) {
+			$entry = $transform( $key, $value );
+
+			$data[key( $entry)] = current( $entry );
+		}
+
+		return mapOf( $data );
+	}
+
 	public function foreach( Closure $action ) {
 		foreach ( $this->array as $key => $element ) {
 			$action( $key, $element );
@@ -70,6 +81,26 @@ class Kmap extends Immutable {
 
 	public function merge( Kmap $map ) {
 		return new static( array_merge( $this->toArray(), $map->toArray() ) );
+	}
+
+	public function any( Closure $predicate ): bool {
+		foreach ( $this->toArray() as $key => $element ) {
+			if ( $predicate( $key, $element ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	public function all( Closure $predicate ): bool {
+		foreach ( $this->toArray() as $key => $element ) {
+			if ( ! $predicate( $key, $element ) ) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	public function filterNotNull(): static {

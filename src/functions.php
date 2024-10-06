@@ -28,10 +28,10 @@ function mutable_empty_list(): MutableKlist {
 	return new MutableKlist( [] );
 }
 
-function map_of( array $map ): Kmap {
+function mapOf( array $map ): Kmap {
 	return new Kmap( $map );
 }
 
-function empty_map(): Kmap {
+function emptyMap(): Kmap {
 	return new Kmap( [] );
 }

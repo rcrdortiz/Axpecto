@@ -5,7 +5,9 @@ namespace Axpecto\Reflection;
 use Attribute;
 use Axpecto\Aop\Annotation;
 use Axpecto\Collection\Concrete\Klist;
+use Axpecto\Collection\Concrete\Kmap;
 use Axpecto\Reflection\Dto\Argument;
+use Exception;
 use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionException;
@@ -37,7 +39,7 @@ class ReflectionUtils {
 			->join( separator: ',' );
 
 		return "$visibility function {$method->getName()}($argumentListString)"
-		       . ( $method->hasReturnType() ? ": {$method->getReturnType()}" : '' );
+		       . ( $method->hasReturnType() ? ": {$method->getReturnType()} " : '' );
 	}
 
 	/**
@@ -50,6 +52,16 @@ class ReflectionUtils {
 		return listFrom( $this->getReflectionClass( $class )->getMethods() )
 			->filter( fn( ReflectionMethod $method ) => $this->methodHasAnnotations( $method, annotationClass: $with ) )
 			->filter( $this->methodIsOverrideable( ... ) );
+	}
+
+	public function getMethods( string $class ): Klist {
+		return listFrom( $this->getReflectionClass( $class )->getMethods() )
+			->filter( $this->methodIsOverrideable( ... ) );
+	}
+
+	public function getAbstractMethods( string $class ): Klist {
+		return listFrom( $this->getReflectionClass( $class )->getMethods() )
+			->filter( fn( ReflectionMethod $method ) => $method->isAbstract() );
 	}
 
 	/**
@@ -107,10 +119,51 @@ class ReflectionUtils {
 		return $instance;
 	}
 
+	public function getMethodArguments( string $class, string $method, array $arguments ) {
+		$parameters = $this->getReflectionClass( $class )
+		                   ->getMethod( $method )
+		                   ->getParameters();
+
+		if ( count( $parameters ) === 0 ) {
+			return [];
+		}
+
+		$parameters = listFrom( $parameters )->map( fn( ReflectionParameter $parameter ) => $parameter->getName() );
+
+		$arguments = array_pad( $arguments, count( $parameters ), null );
+
+		return array_combine( $parameters->toArray(), $arguments );
+	}
+
+	public function getMethodArgumentsDefaults( string $class, string $method ): Kmap {
+		$parameters = $this->getReflectionClass( $class )
+		                   ->getMethod( $method )
+		                   ->getParameters();
+
+		if ( count( $parameters ) === 0 ) {
+			return emptyMap();
+		}
+
+		return listFrom( $parameters )
+			->mapOf( fn( ReflectionParameter $value ) => [
+				$value->getName() => $value->isDefaultValueAvailable() ? $value->getDefaultValue() : null,
+			] )->filterNotNull();
+	}
+
+	public function getPropertyAnnotated( string $class, string $property, string $with = Annotation::class ): Annotation {
+		return listFrom( $this->getReflectionClass( $class )->getProperty( $property )->getAttributes() )
+			->filter( fn( ReflectionAttribute $attribute ) => $attribute->getName() === $with )
+			->firstOrNull()?->newInstance();
+	}
+
+	public function getReturnType( ReflectionMethod $method ): ?string {
+		return $method->hasReturnType() ? $method->getReturnType()->getName() : null;
+	}
+
 	private function reflectionToArgument( ReflectionProperty|ReflectionParameter $property ): Argument {
 		return new Argument(
 			name: $property->getName(),
-			type: $property->getType()->getName()
+			type: $property->getType()->getName(),
 		);
 	}
 
@@ -143,7 +196,7 @@ class ReflectionUtils {
 	private function getAnnotations( KList $attributes, string $target = null, string $annotationClass = Annotation::class ): Klist {
 		return $attributes
 			->filter( fn( ReflectionAttribute $attribute ) => $attribute->getTarget() == $target )
-			->map( fn( ReflectionAttribute $attribute ) => $attribute->newInstance() )
+			->map( fn( ReflectionAttribute $attribute ) => class_exists( $attribute->getName() ) ? $attribute->newInstance() : null )
 			->filter( fn( $annotation ) => $annotation instanceof $annotationClass );
 	}
 
@@ -153,7 +206,7 @@ class ReflectionUtils {
 	 * @return ReflectionClass<T>
 	 * @throws ReflectionException
 	 */
-	private function getReflectionClass( string $class ): ReflectionClass {
+	public function getReflectionClass( string $class ): ReflectionClass {
 		return $this->reflectionClasses[ $class ] = $this->reflectionClasses[ $class ] ?? new ReflectionClass( $class );
 	}
 }
