@@ -13,8 +13,8 @@ class BuildChain {
 	public function __construct(
 		protected Klist $annotations,
 		protected string $class,
-		protected ?string $method = null,
-		protected BuildOutput $output = new BuildOutput(),
+		protected ?string $method,
+		protected BuildOutput $output,
 	) {
 	}
 

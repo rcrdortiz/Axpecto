@@ -2,100 +2,148 @@
 
 namespace Axpecto\Loader;
 
-use Axpecto\Container\Annotation\Singleton;
 use Exception;
 use InvalidArgumentException;
 
-#[Singleton]
+/**
+ * Class FileSystemClassLoader
+ *
+ * A class loader that supports autoloading from registered paths based on namespace and class name.
+ */
 class FileSystemClassLoader {
-
+	/**
+	 * FileSystemClassLoader constructor.
+	 *
+	 * @param array<string, string> $registeredPaths Registered namespace paths.
+	 * @param array<string, string> $loadedClasses   Loaded classes mapped by file path.
+	 */
 	public function __construct(
 		private array $registeredPaths = [],
 		private array $loadedClasses = [],
 	) {
-		spl_autoload_register( $this->loadClass( ... ) );
+		// Register the class loader with the SPL autoloader stack.
+		spl_autoload_register( [ $this, 'loadClass' ] );
 	}
 
+	/**
+	 * Registers a namespace with a corresponding file path.
+	 *
+	 * @param string $namespace The namespace to register.
+	 * @param string $path      The base directory for the namespace.
+	 *
+	 * @return static
+	 */
 	public function registerPath( string $namespace, string $path ): static {
-		$this->registeredPaths[ $namespace ] = $path;
+		$this->registeredPaths[ $namespace ] = rtrim( $path, '/' );
 
 		return $this;
 	}
 
 	/**
+	 * Returns the list of registered namespace paths.
+	 *
 	 * @return array<string>
 	 */
-	public function get_registered_paths(): array {
+	public function getRegisteredPaths(): array {
 		return $this->registeredPaths;
 	}
 
 	/**
-	 * @throws Exception
+	 * Loads a class from a specific file and returns the class name.
+	 *
+	 * @param string $filename The file path to load the class from.
+	 *
+	 * @return string|null The loaded class name or null if not found.
+	 *
+	 * @throws InvalidArgumentException If the file doesn't exist or is unreadable.
+	 * @throws Exception On other errors while loading the file.
 	 */
-	public function load_class_in_file( string $filename ): ?string {
-		if ( isset( $this->loadedClasses[ strtolower( $filename ) ] ) ) {
-			return $this->loadedClasses[ strtolower( $filename ) ];
+	public function loadClassInFile( string $filename ): ?string {
+		$filename = strtolower( $filename );
+
+		if ( isset( $this->loadedClasses[ $filename ] ) ) {
+			return $this->loadedClasses[ $filename ];
 		}
 
 		if ( ! file_exists( $filename ) || ! is_readable( $filename ) ) {
 			throw new InvalidArgumentException( "Could not load file: $filename" );
 		}
 
-		// @TODO Maybe add a wrapper so that we can have unit tests.
-		$classes_before_require = array_merge( get_declared_classes(), get_declared_interfaces(), get_declared_traits() );
+		$classesBefore = get_declared_classes();
 		ob_start();
 		require_once $filename;
-		ob_clean();
+		ob_end_clean();
+		$classesAfter = get_declared_classes();
 
-		$classes_after_require = array_merge( get_declared_classes(), get_declared_interfaces(), get_declared_traits() );
-		$new_classes           = array_diff( $classes_after_require, $classes_before_require );
-		$new_class             = array_shift( $new_classes );
+		$newClass = array_diff( $classesAfter, $classesBefore );
+		$newClass = array_shift( $newClass );
 
-		if ( $new_class ) {
-			$this->loadedClasses[ $filename ] = $new_classes;
+		if ( $newClass ) {
+			$this->loadedClasses[ $filename ] = $newClass;
 
-			return $new_class;
+			return $newClass;
 		}
 
 		return null;
 	}
 
-	public function loadClass( string $class_name ): bool {
-		$parts = explode( '\\', $class_name );
+	/**
+	 * Attempts to load a class based on its namespace and class name.
+	 *
+	 * @param string $className The fully qualified class name.
+	 *
+	 * @return bool True if the class was successfully loaded, false otherwise.
+	 */
+	public function loadClass( string $className ): bool {
+		$parts = explode( '\\', $className );
 		if ( count( $parts ) < 2 ) {
 			return false;
 		}
+
 		$class     = array_pop( $parts );
 		$namespace = array_shift( $parts );
+		$basePath  = $this->registeredPaths[ $namespace ] ?? null;
 
-		$base_path = $this->registeredPaths[ $namespace ] ?? null;
-		if ( ! $base_path ) {
+		if ( ! $basePath ) {
 			return false;
 		}
 
-		$file_path = $base_path . join( '/', $parts );
-		$wp_class  = $class = str_replace( '_', '-', $class );
-		$files     = [
-			$file_path . "/$class.php",
-			$file_path . "/class-$class.php",
-			$file_path . "/interface-$class.php",
-			$file_path . "/trait-$class.php",
-			$file_path . "/$wp_class.php",
-			$file_path . "/class-$wp_class.php",
-			$file_path . "/interface-$wp_class.php",
-			$file_path . "/trait-$wp_class.php",
-		];
+		$filePath      = $basePath . '/' . implode( '/', $parts );
+		$classVariants = $this->getClassFileVariants( $filePath, $class );
 
-		foreach ( $files as $file ) {
+		foreach ( $classVariants as $file ) {
 			$file = strtolower( $file );
 			if ( file_exists( $file ) && is_readable( $file ) ) {
 				require_once $file;
-				$this->loadedClasses[ $file ] = $class_name;
+				$this->loadedClasses[ $file ] = $className;
 
 				return true;
 			}
 		}
 
 		return false;
+	}
+
+	/**
+	 * Generates possible file paths for class loading.
+	 *
+	 * @param string $filePath The base file path.
+	 * @param string $class    The class name.
+	 *
+	 * @return array<string> List of possible file paths.
+	 */
+	private function getClassFileVariants( string $filePath, string $class ): array {
+		$wpClass = str_replace( '_', '-', $class );
+
+		return [
+			"$filePath/$class.php",
+			"$filePath/class-$class.php",
+			"$filePath/interface-$class.php",
+			"$filePath/trait-$class.php",
+			"$filePath/$wpClass.php",
+			"$filePath/class-$wpClass.php",
+			"$filePath/interface-$wpClass.php",
+			"$filePath/trait-$wpClass.php",
+		];
 	}
 }

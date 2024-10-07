@@ -1,11 +1,9 @@
 <?php
 
-
-use PHPUnit\Framework\TestCase;
 use Axpecto\Container\Container;
-use Axpecto\Container\Exception\CircularReferenceException;
-use Axpecto\Container\Exception\UnresolvedDependencyException;
 use Axpecto\Container\Exception\AutowireDependencyException;
+use Axpecto\Container\Exception\CircularReferenceException;
+use PHPUnit\Framework\TestCase;
 
 class ContainerTest extends TestCase {
 	private Container $container;
@@ -101,7 +99,7 @@ class ClassA {
 	}
 }
 
-class ClassB{
+class ClassB {
 	public function __construct( public ?ClassA $classA = null ) {
 	}
 }

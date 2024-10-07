@@ -2,6 +2,7 @@
 
 namespace Axpecto\Container;
 
+use Axpecto\Aop\BuildInterception\BuildChainFactory;
 use Axpecto\Aop\ClassBuilder;
 use Axpecto\Aop\Exception\ClassAlreadyBuiltException;
 use Axpecto\Container\Annotation\Inject;
@@ -41,10 +42,10 @@ class Container {
 	/**
 	 * Container constructor.
 	 *
-	 * @param array           $values       Stores constant values (like configs).
-	 * @param array           $bindings     Maps interfaces or abstract classes to concrete implementations.
-	 * @param array           $instances    Stores class instances (usually singletons).
-	 * @param array           $autoWiring   Tracks classes currently being autowired to prevent circular references.
+	 * @param array $values     Stores constant values (like configs).
+	 * @param array $bindings   Maps interfaces or abstract classes to concrete implementations.
+	 * @param array $instances  Stores class instances (usually singletons).
+	 * @param array $autoWiring Tracks classes currently being autowired to prevent circular references.
 	 */
 	public function __construct(
 		private array $values = [],
@@ -54,7 +55,7 @@ class Container {
 	) {
 		$this->reflect                             = new ReflectionUtils();
 		$this->instances[ ReflectionUtils::class ] = $this->reflect;
-		$this->classBuilder                        = new ClassBuilder( $this->reflect, $this );
+		$this->classBuilder                        = new ClassBuilder( $this->reflect, $this, new BuildChainFactory() );
 		$this->instances[ ClassBuilder::class ]    = $this->classBuilder;
 		$this->instances[ self::class ]            = $this;
 	}
@@ -142,7 +143,7 @@ class Container {
 
 		foreach ( $propertiesToInject as $property ) {
 			/** @var Inject $annotation */
-			$annotation = $this->reflect->getPropertyAnnotated( get_class( $instance ), $property->name, with: Inject::class );
+			$annotation = $this->reflect->getPropertyAnnotated( $instance::class, $property->name, with: Inject::class );
 
 			$propertyValue = $annotation->args
 				? new ( $property->type )( ...$annotation->args )
