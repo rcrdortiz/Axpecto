@@ -5,7 +5,6 @@ namespace Axpecto\Container;
 use Axpecto\Aop\ClassBuilder;
 use Axpecto\Aop\Exception\ClassAlreadyBuiltException;
 use Axpecto\Container\Annotation\Inject;
-use Axpecto\Container\Annotation\Singleton;
 use Axpecto\Container\Exception\AutowireDependencyException;
 use Axpecto\Container\Exception\CircularReferenceException;
 use Axpecto\Container\Exception\UnresolvedDependencyException;
@@ -17,18 +16,36 @@ use ReflectionException;
 /**
  * Class Container
  *
- * This class is responsible for dependency injection and handling object instantiation and autowiring.
- * It manages class instances, services, and values, and provides methods to autowire dependencies,
- * handle property injections, and avoid circular references.
+ * A Dependency Injection Container responsible for managing object instantiation, autowiring,
+ * and handling circular references. It allows binding interfaces to implementations, managing
+ * singletons, and injecting dependencies via annotations.
  *
  * @template T
  */
-#[Singleton]
-final class Container {
+class Container {
 
+	/**
+	 * Responsible for creating proxy and intercepted classes.
+	 *
+	 * @var ClassBuilder The class builder instance.
+	 */
 	private ClassBuilder $classBuilder;
+
+	/**
+	 * Reflection utility for class analysis.
+	 *
+	 * @var ReflectionUtils The reflection utility instance.
+	 */
 	private ReflectionUtils $reflect;
 
+	/**
+	 * Container constructor.
+	 *
+	 * @param array           $values       Stores constant values (like configs).
+	 * @param array           $bindings     Maps interfaces or abstract classes to concrete implementations.
+	 * @param array           $instances    Stores class instances (usually singletons).
+	 * @param array           $autoWiring   Tracks classes currently being autowired to prevent circular references.
+	 */
 	public function __construct(
 		private array $values = [],
 		private array $bindings = [],
@@ -43,138 +60,164 @@ final class Container {
 	}
 
 	/**
-	 * @throws ReflectionException
+	 * Adds a class instance to the container.
+	 *
+	 * @param string $class    The class name.
+	 * @param object $instance The instance of the class.
 	 */
 	public function addClassInstance( string $class, object $instance ): void {
 		$this->instances[ $class ] = $instance;
 	}
 
-	public function addValue( string $name, string $value ): void {
+	/**
+	 * Adds a value (e.g., config or constant) to the container.
+	 *
+	 * @param string $name  The name of the value.
+	 * @param mixed  $value The value to add.
+	 */
+	public function addValue( string $name, mixed $value ): void {
 		$this->values[ $this->getValueKey( $name ) ] = $value;
 	}
 
+	/**
+	 * Binds an interface or class to a specific implementation.
+	 *
+	 * @param string $classOrInterface The class or interface name.
+	 * @param string $class            The class name to bind.
+	 */
 	public function bind( string $classOrInterface, string $class ): void {
 		$this->bindings[ $classOrInterface ] = $class;
 	}
 
 	/**
-	 * @param string $dependencyName
+	 * Retrieves a dependency from the container.
 	 *
-	 * @return mixed
-	 * @throws Exception
+	 * @param string $dependencyName The name of the dependency.
+	 *
+	 * @return mixed The resolved dependency.
+	 * @throws Exception If the dependency cannot be resolved.
 	 */
 	public function get( string $dependencyName ): mixed {
 		try {
-			$dependency = $this->seekDependency( $dependencyName );
+			return $this->seekDependency( $dependencyName );
 		} catch ( UnresolvedDependencyException ) {
-			$class      = $this->buildClass( $dependencyName );
-			$dependency = $this->autoWire( $class );
-		}
+			// If not found, attempt autowiring
+			$class = $this->buildClass( $dependencyName );
 
-		return $dependency;
+			return $this->autoWire( $class );
+		}
 	}
 
 	/**
-	 * @param string $dependency
+	 * Autowires the class, injecting its dependencies.
 	 *
-	 * @return T
-	 * @throws Exception
+	 * @param string $class The class to autowire.
+	 *
+	 * @return object The autowired instance.
+	 * @throws Exception If autowiring fails or circular references are detected.
 	 */
-	private function autoWire( string $class ) {
+	private function autoWire( string $class ): object {
 		$this->checkCircularReference( $class );
 		$this->addAutoWiring( $class );
+
+		// Instantiate and inject dependencies
 		$instance = new $class( ...$this->autoWireConstructorArguments( $class ) );
-		$instance = $this->applyPropertyInjection( $instance );
+		$this->applyPropertyInjection( $instance );
+
 		$this->addClassInstance( $class, $instance );
 		$this->removeAutoWiring( $class );
 
 		return $instance;
 	}
 
-	private function applyPropertyInjection( object $instance ) {
-		$inject = $this->reflect->getAnnotatedProperties( $instance::class, Inject::class )->firstOrNull();
+	/**
+	 * Applies property injection to an instance based on the Inject annotation.
+	 *
+	 * @param object $instance The instance to inject.
+	 *
+	 * @throws Exception If the dependency cannot be resolved.
+	 */
+	private function applyPropertyInjection( object $instance ): void {
+		$propertiesToInject = $this->reflect->getAnnotatedProperties( $instance::class, Inject::class );
 
-		if ( ! $inject ) {
-			return $instance;
+		foreach ( $propertiesToInject as $property ) {
+			/** @var Inject $annotation */
+			$annotation = $this->reflect->getPropertyAnnotated( get_class( $instance ), $property->name, with: Inject::class );
+
+			$propertyValue = $annotation->args
+				? new ( $property->type )( ...$annotation->args )
+				: $this->getFromArgument( $property );
+
+			// Set the property value
+			$this->reflect->setPropertyValue( $instance, $property->name, $propertyValue );
 		}
-
-		$provided = null;
-		/** @var Inject $annotation */
-		$annotation = $this->reflect->getPropertyAnnotated( get_class( $instance ), $inject->name, with: Inject::class );
-		if ( $annotation->args ) {
-			$provided = new ( $inject->type )( ...$annotation->args );
-		}
-
-		return $this->reflect
-			       ->getAnnotatedProperties( $instance::class, Inject::class )
-			       ->mapOf( fn( Argument $arg ) => [ $arg->name => $provided ?? $this->getFromArgument( $arg ) ] )
-			       ->map( fn( $key, $value ) => $this->reflect->setPropertyValue( $instance, $key, $value ) )
-			       ->firstOrNull() ?? $instance;
 	}
 
 	/**
-	 * @param class-string<T> $class
+	 * Resolves constructor arguments via autowiring.
 	 *
-	 * @return T
-	 * @throws Exception
+	 * @param string $class The class name.
+	 *
+	 * @return array The resolved constructor arguments.
+	 * @throws Exception If the dependencies cannot be resolved.
 	 */
-	private function autoWireConstructorArguments( string $class ) {
+	private function autoWireConstructorArguments( string $class ): array {
 		return $this->reflect
 			->getConstructorArguments( $class )
-			->map( $this->getFromArgument( ... ) );
+			->map( fn( Argument $arg ) => $this->getFromArgument( $arg ) )
+			->toArray();
 	}
 
 	/**
-	 * @throws Exception
+	 * Resolves the value or service for the given argument.
+	 *
+	 * @param Argument $arg The argument to resolve.
+	 *
+	 * @return mixed The resolved value or dependency.
+	 * @throws Exception If the dependency cannot be resolved.
 	 */
-	private function getFromArgument( Argument $arg ) {
-		$dependencyName = $arg->type;
-		if ( in_array( $arg->type, [ 'string', 'int', 'bool' ] ) ) {
-			$dependencyName = $arg->name;
-		}
-
-		return $this->get( $dependencyName );
+	private function getFromArgument( Argument $arg ): mixed {
+		return $this->get( in_array( $arg->type, [ 'string', 'int', 'bool' ] ) ? $arg->name : $arg->type );
 	}
 
 	/**
-	 * @throws Exception
+	 * Checks if there is a circular reference during autowiring.
+	 *
+	 * @param string $class The class name.
+	 *
+	 * @throws CircularReferenceException If a circular reference is detected.
 	 */
-	private function checkCircularReference( string $name ): void {
-		if ( isset( $this->autoWiring[ $name ] ) ) {
-			throw new CircularReferenceException( $name );
+	private function checkCircularReference( string $class ): void {
+		if ( isset( $this->autoWiring[ $class ] ) ) {
+			throw new CircularReferenceException( $class );
 		}
 	}
 
-	private function seekDependency( string $dependencyName ) {
-		if ( isset( $this->bindings[ $dependencyName ] ) ) {
-			$dependencyName = $this->bindings[ $dependencyName ];
-		}
+	/**
+	 * Seeks and returns the dependency from bindings, instances, or values.
+	 *
+	 * @param string $dependencyName The name of the dependency.
+	 *
+	 * @return mixed The resolved dependency.
+	 * @throws UnresolvedDependencyException If the dependency cannot be resolved.
+	 */
+	private function seekDependency( string $dependencyName ): mixed {
+		$dependencyName = $this->bindings[ $dependencyName ] ?? $dependencyName;
 
-		if ( isset( $this->instances[ $dependencyName ] ) ) {
-			return $this->instances[ $dependencyName ];
-		}
-
-		$valueKey = $this->getValueKey( $dependencyName );
-		if ( isset( $this->values[ $valueKey ] ) ) {
-			return $this->values[ $valueKey ];
-		}
-
-		throw new UnresolvedDependencyException( $dependencyName );
+		return $this->instances[ $dependencyName ]
+		       ?? $this->values[ $this->getValueKey( $dependencyName ) ]
+		          ?? throw new UnresolvedDependencyException( $dependencyName );
 	}
 
-	private function addAutoWiring( string $class ): void {
-		$this->autoWiring[ $class ] = $class;
-	}
-
-	private function removeAutoWiring( mixed $class ): void {
-		unset( $this->autoWiring[ $class ] );
-	}
-
-	private function getValueKey( string $name ): string {
-		return "container.value.$name";
-	}
-
-	private function buildClass( mixed $dependency ) {
+	/**
+	 * Builds a class and binds it to the container.
+	 *
+	 * @param string $dependency The dependency name.
+	 *
+	 * @return string The built class name.
+	 * @throws AutowireDependencyException If the class cannot be built.
+	 */
+	private function buildClass( string $dependency ): string {
 		try {
 			$class = $this->classBuilder->build( $dependency );
 			$this->bind( $dependency, $class );
@@ -185,5 +228,34 @@ final class Container {
 		} catch ( ReflectionException $exception ) {
 			throw new AutowireDependencyException( end( $this->autoWiring ), $dependency, $exception );
 		}
+	}
+
+	/**
+	 * Adds a class to the auto-wiring tracking to detect circular references.
+	 *
+	 * @param string $class The class name.
+	 */
+	private function addAutoWiring( string $class ): void {
+		$this->autoWiring[ $class ] = $class;
+	}
+
+	/**
+	 * Removes a class from the auto-wiring tracking.
+	 *
+	 * @param string $class The class name.
+	 */
+	private function removeAutoWiring( string $class ): void {
+		unset( $this->autoWiring[ $class ] );
+	}
+
+	/**
+	 * Generates a value key for internal value storage.
+	 *
+	 * @param string $name The base name.
+	 *
+	 * @return string The generated value key.
+	 */
+	private function getValueKey( string $name ): string {
+		return "container.value.$name";
 	}
 }
