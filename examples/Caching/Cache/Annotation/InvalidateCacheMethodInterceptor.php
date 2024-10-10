@@ -5,7 +5,7 @@ namespace Examples\Caching\Cache\Annotation;
 use Axpecto\Aop\MethodInterception\MethodExecutionAnnotation;
 use Axpecto\Aop\MethodInterception\MethodExecutionAnnotationHandler;
 use Axpecto\Aop\MethodInterception\MethodExecutionChain;
-use Axpecto\Aop\MethodInterception\MethodExecutionContext;
+use Axpecto\Aop\MethodInterception\Method;
 use Axpecto\Container\Annotation\Singleton;
 use Examples\Caching\Cache\CacheInterface;
 
@@ -17,11 +17,11 @@ class InvalidateCacheMethodInterceptor implements MethodExecutionAnnotationHandl
 	) {
 	}
 
-	public function intercept( MethodExecutionChain $chain, MethodExecutionContext $context, MethodExecutionAnnotation $annotation ): mixed {
+	public function intercept( MethodExecutionChain $chain, Method $method, MethodExecutionAnnotation $annotation ): mixed {
 		/** @var InvalidateCache $annotation */
 
 		$this->cache->delete(
-			namespace: $context->class,
+			namespace: $method->class,
 			cache_key: $annotation->key
 		);
 

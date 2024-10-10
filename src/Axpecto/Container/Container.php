@@ -4,10 +4,10 @@ namespace Axpecto\Container;
 
 use Axpecto\Aop\BuildInterception\BuildChainFactory;
 use Axpecto\Aop\ClassBuilder;
-use Axpecto\Aop\Exception\ClassAlreadyBuiltException;
 use Axpecto\Container\Annotation\Inject;
 use Axpecto\Container\Exception\AutowireDependencyException;
 use Axpecto\Container\Exception\CircularReferenceException;
+use Axpecto\Container\Exception\ClassAlreadyBuiltException;
 use Axpecto\Container\Exception\UnresolvedDependencyException;
 use Axpecto\Reflection\Dto\Argument;
 use Axpecto\Reflection\ReflectionUtils;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Axpecto\Aop\Exception;
+namespace Axpecto\Container\Exception;
 
 use Exception;
 

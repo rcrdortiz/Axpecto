@@ -3,11 +3,10 @@
 namespace Axpecto\Aop;
 
 use Axpecto\Aop\BuildInterception\BuildAnnotation;
-use Axpecto\Aop\BuildInterception\BuildChain;
 use Axpecto\Aop\BuildInterception\BuildChainFactory;
 use Axpecto\Aop\BuildInterception\BuildOutput;
-use Axpecto\Aop\Exception\ClassAlreadyBuiltException;
 use Axpecto\Container\Container;
+use Axpecto\Container\Exception\ClassAlreadyBuiltException;
 use Axpecto\Reflection\ReflectionUtils;
 use Exception;
 use ReflectionException;
@@ -61,8 +60,7 @@ class ClassBuilder {
 			$methodAnnotations = $this->reflect
 				->getMethodAnnotations( $class, $method->getName(), BuildAnnotation::class )
 				->map( $this->bindAnnotationHandler( ... ) );
-
-			$buildOutput = $this->buildChainFactory->get( $methodAnnotations, $class, $method->getName() )->proceed( $buildOutput );
+			$buildOutput = $this->buildChainFactory->get( $methodAnnotations, $class, $method->getName(), $buildOutput )->proceed();
 		}
 
 		// If no output from annotations, return original class

@@ -5,11 +5,9 @@ namespace Examples\Caching\Cache\Annotation;
 use Axpecto\Aop\MethodInterception\MethodExecutionAnnotation;
 use Axpecto\Aop\MethodInterception\MethodExecutionAnnotationHandler;
 use Axpecto\Aop\MethodInterception\MethodExecutionChain;
-use Axpecto\Aop\MethodInterception\MethodExecutionContext;
-use Axpecto\Container\Annotation\Singleton;
+use Axpecto\Aop\MethodInterception\Method;
 use Examples\Caching\Cache\CacheInterface;
 
-#[Singleton]
 class CacheMethodInterceptor implements MethodExecutionAnnotationHandler {
 
 	public function __construct(
@@ -17,13 +15,13 @@ class CacheMethodInterceptor implements MethodExecutionAnnotationHandler {
 	) {
 	}
 
-	public function intercept( MethodExecutionChain $chain, MethodExecutionContext $context, MethodExecutionAnnotation $annotation ): mixed {
+	public function intercept( MethodExecutionChain $chain, Method $method, MethodExecutionAnnotation $annotation ): mixed {
 		/** @var Cache $annotation */
 
-		$key = $annotation->key ?? $context->method . ( $context->arguments ? md5( json_encode( $context->arguments ) ) : '' );
+		$key = $annotation->key ?? $chain->getMethod()->name . ( $chain->getMethod()->arguments ? md5( json_encode( $method->arguments ) ) : '' );
 
 		return $this->cache->runCached(
-			namespace: $context->class,
+			namespace: $method->class,
 			key:       $key,
 			action: fn() => $chain->proceed(),
 			ttl:       $annotation->ttl,
