@@ -32,14 +32,17 @@ class ReflectionUtils {
 	/**
 	 * Generates a method definition string with visibility, name, arguments, and return type.
 	 *
-	 * @param ReflectionMethod $method
+	 * @param string $class
+	 * @param string $method
 	 *
 	 * @return string
 	 * @throws ReflectionException
 	 */
-	public function getMethodDefinitionString( ReflectionMethod $method ): string {
-		$visibility         = $method->isProtected() ? 'protected' : 'public';
-		$argumentListString = listFrom( $method->getParameters() )
+	public function getMethodDefinitionString( string $class, string $method ): string {
+		$reflectionMethod = $this->getReflectionClass( $class )->getMethod( $method );
+
+		$visibility         = $reflectionMethod->isProtected() ? 'protected' : 'public';
+		$argumentListString = listFrom( $reflectionMethod->getParameters() )
 			->map( function ( ReflectionParameter $arg ) {
 				$definition = ( $arg->hasType() ? $arg->getType() . ' ' : '' ) . ( $arg->isVariadic() ? '...' : '' ) . "\${$arg->getName()}";
 				if ( $arg->isDefaultValueAvailable() ) {
@@ -52,9 +55,9 @@ class ReflectionUtils {
 			} )
 			->join( ',' );
 
-		$returnType = $method->hasReturnType() ? ': ' . $method->getReturnType() : '';
+		$returnType = $reflectionMethod->hasReturnType() ? ': ' . $reflectionMethod->getReturnType() : '';
 
-		return "$visibility function {$method->getName()}($argumentListString)$returnType";
+		return "$visibility function {$reflectionMethod->getName()}($argumentListString)$returnType";
 	}
 
 	/**
@@ -68,7 +71,7 @@ class ReflectionUtils {
 	 */
 	public function getAnnotatedMethods( string $class, string $with = Annotation::class ): Klist {
 		return $this->getMethods( $class )
-			->filter( fn( ReflectionMethod $method ) => $this->methodHasAnnotations( $method, $with ) );
+		            ->filter( fn( ReflectionMethod $method ) => $this->methodHasAnnotations( $method, $with ) );
 	}
 
 	/**
@@ -94,7 +97,7 @@ class ReflectionUtils {
 	 */
 	public function getAbstractMethods( string $class ): Klist {
 		return $this->getMethods( $class )
-			->filter( fn( ReflectionMethod $method ) => $method->isAbstract() );
+		            ->filter( fn( ReflectionMethod $method ) => $method->isAbstract() );
 	}
 
 	/**
@@ -107,7 +110,7 @@ class ReflectionUtils {
 	 * @return Klist<Annotation>
 	 * @throws ReflectionException
 	 */
-	public function getMethodAnnotations( string $class, string $method, string $annotationClass ): Klist {
+	public function getMethodAnnotations( string $class, string $method, string $annotationClass = Annotation::class ): Klist {
 		return $this->getAnnotations(
 			attributes:      listFrom( $this->getReflectionClass( $class )->getMethod( $method )->getAttributes() ),
 			target:          Attribute::TARGET_METHOD,
@@ -126,7 +129,7 @@ class ReflectionUtils {
 	 */
 	public function getClassAnnotations( string $class, string $annotationClass = Annotation::class ): Klist {
 		return $this->getAnnotations(
-			attributes:      listFrom( $this->getReflectionClass( $class )->getAttributes() ),
+			attributes:      $this->getAttributes( $class ),
 			target:          Attribute::TARGET_CLASS,
 			annotationClass: $annotationClass
 		);
@@ -188,7 +191,7 @@ class ReflectionUtils {
 	 * @return array
 	 * @throws ReflectionException
 	 */
-	public function getMethodArguments( string $class, string $method, array $arguments ) {
+	public function mapValuesToArguments( string $class, string $method, array $arguments ) {
 		$parameters = $this->getReflectionClass( $class )
 		                   ->getMethod( $method )
 		                   ->getParameters();
@@ -243,12 +246,49 @@ class ReflectionUtils {
 	/**
 	 * Gets the return type of a method.
 	 *
-	 * @param ReflectionMethod $method
+	 * @param string $class
+	 * @param string $method
 	 *
 	 * @return string|null
+	 * @throws ReflectionException
 	 */
-	public function getReturnType( ReflectionMethod $method ): ?string {
+	public function getReturnType( string $class, string $method ): ?string {
+		$method = $this->getReflectionClass( $class )->getMethod( $method );
+
 		return $method->hasReturnType() ? $method->getReturnType()->getName() : null;
+	}
+
+	/**
+	 * Checks if the supplied class is an interface.
+	 *
+	 * @param $class
+	 *
+	 * @return bool
+	 * @throws ReflectionException
+	 */
+	public function isInterface( $class ): bool {
+		return $this->getReflectionClass( $class )->isInterface();
+	}
+
+	/**
+	 * Returns a list of attributes for a method.
+	 *
+	 * @return Klist<Attribute>
+	 * @throws ReflectionException
+	 */
+	public function getMethodAttributes( string $class, string $method ): Klist {
+		return listFrom( $this->getReflectionClass( $class )->getMethod( $method )->getAttributes() )
+			->map( fn( ReflectionAttribute $attribute ) => $attribute->newInstance() );
+	}
+
+	/**
+	 * @return Klist<Attribute>
+	 * @throws ReflectionException
+	 */
+	public function getClassAttributes( string $class ): Klist {
+		return listFrom( $this->getReflectionClass( $class )->getAttributes() )
+			->filter( fn( ReflectionAttribute $attribute ) => class_exists( $attribute->getName() ) )
+			->map( fn( ReflectionAttribute $attribute ) => $attribute->newInstance() );
 	}
 
 	/**
@@ -332,7 +372,19 @@ class ReflectionUtils {
 	 * @return ReflectionClass<T>
 	 * @throws ReflectionException
 	 */
-	public function getReflectionClass( string $class ): ReflectionClass {
+	private function getReflectionClass( string $class ): ReflectionClass {
 		return $this->reflectionClasses[ $class ] ??= new ReflectionClass( $class );
+	}
+
+	/**
+	 * Wrapper for getting attributes from a class as a Klist.
+	 *
+	 * @param string $class
+	 *
+	 * @return Klist
+	 * @throws ReflectionException
+	 */
+	private function getAttributes( string $class ): Klist {
+		return listFrom( $this->getReflectionClass( $class )->getAttributes() );
 	}
 }

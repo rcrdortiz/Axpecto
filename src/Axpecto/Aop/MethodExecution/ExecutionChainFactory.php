@@ -1,7 +1,8 @@
 <?php
 
-namespace Axpecto\Aop\MethodInterception;
+namespace Axpecto\Aop\MethodExecution;
 
+use Axpecto\Aop\Annotation;
 use Axpecto\Collection\Concrete\Klist;
 
 /**
@@ -23,20 +24,17 @@ use Axpecto\Collection\Concrete\Klist;
  *
  * @package Axpecto\Aop\MethodInterception
  */
-class ExecutionChainFactory
-{
+class ExecutionChainFactory {
 	/**
 	 * Creates a new `MethodExecutionChain` instance.
 	 *
-	 * @param Method $method The method execution context.
-	 * @param Klist<MethodExecutionAnnotation> $annotations The list of annotations to be applied to the method.
+	 * @param Klist<Annotation> $annotations The list of annotations to be applied to the method.
 	 *
 	 * @return MethodExecutionChain A configured method execution chain.
 	 */
 	public function get(
-		Method $method,
 		Klist $annotations,
 	): MethodExecutionChain {
-		return new MethodExecutionChain($method, $annotations);
+		return new MethodExecutionChain( $annotations );
 	}
 }

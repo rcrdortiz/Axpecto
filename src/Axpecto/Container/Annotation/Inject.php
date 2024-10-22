@@ -19,8 +19,8 @@ class Inject extends Annotation {
 	 * @param array $args Arguments to be injected into the property.
 	 */
 	public function __construct(
+		public readonly ?string $class = null,
 		public readonly array $args = [],
 	) {
-		parent::__construct();
 	}
 }

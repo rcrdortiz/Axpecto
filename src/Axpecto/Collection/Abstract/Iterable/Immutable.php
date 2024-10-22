@@ -12,13 +12,10 @@ use JsonSerializable;
 
 abstract class Immutable implements ArrayAccess, Countable, Iterator, JsonSerializable {
 
-	public readonly int $size;
-
 	public function __construct(
 		protected array $array = [],
 		protected int $index = 0,
 	) {
-		$this->size = $this->count();
 	}
 
 	public function nextElement(): mixed {
@@ -40,7 +37,11 @@ abstract class Immutable implements ArrayAccess, Countable, Iterator, JsonSerial
 	}
 
 	public function current(): mixed {
-		return $this->array[ $this->index ];
+		if ( isset( $this->array[ $this->index ] ) ) {
+			return $this->array[ $this->index ];
+		}
+
+		return null;
 	}
 
 	public function next(): void {
@@ -124,5 +125,9 @@ abstract class Immutable implements ArrayAccess, Countable, Iterator, JsonSerial
 		}
 
 		return mapOf( $map );
+	}
+
+	public function join( string $separator ) {
+		return join( $separator, $this->toArray() );
 	}
 }

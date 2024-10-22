@@ -1,6 +1,6 @@
 # Axpecto
 
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![GitHub](https://img.shields.io/github/license/JsonMapper/JsonMapper)](https://choosealicense.com/licenses/mit/)
 
 Axpecto is a magically versatile PHP library that brings the power of aspect-oriented programming (AOP), dependency injection (DI), and enhanced collections to your projects. With Axpecto, you can seamlessly add cross-cutting concerns, manage object dependencies, and work with collections in a more efficient and intuitive way.
 

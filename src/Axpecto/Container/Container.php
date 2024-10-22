@@ -2,8 +2,9 @@
 
 namespace Axpecto\Container;
 
-use Axpecto\Aop\BuildInterception\BuildChainFactory;
-use Axpecto\Aop\ClassBuilder;
+use Axpecto\Aop\AnnotationReader;
+use Axpecto\Aop\Build\BuildChainFactory;
+use Axpecto\Build\ClassBuilder;
 use Axpecto\Container\Annotation\Inject;
 use Axpecto\Container\Exception\AutowireDependencyException;
 use Axpecto\Container\Exception\CircularReferenceException;
@@ -18,8 +19,8 @@ use ReflectionException;
  * Class Container
  *
  * A Dependency Injection Container responsible for managing object instantiation, autowiring,
- * and handling circular references. It allows binding interfaces to implementations, managing
- * singletons, and injecting dependencies via annotations.
+ * and handling circular references. It allows binding interfaces to implementations,
+ * and injecting dependencies via annotations.
  *
  * @template T
  */
@@ -55,9 +56,20 @@ class Container {
 	) {
 		$this->reflect                             = new ReflectionUtils();
 		$this->instances[ ReflectionUtils::class ] = $this->reflect;
-		$this->classBuilder                        = new ClassBuilder( $this->reflect, $this, new BuildChainFactory() );
-		$this->instances[ ClassBuilder::class ]    = $this->classBuilder;
-		$this->instances[ self::class ]            = $this;
+
+		$annotationReader                           = new AnnotationReader(
+			container: $this,
+			reflect:   $this->reflect
+		);
+		$this->instances[ AnnotationReader::class ] = $annotationReader;
+
+		$this->classBuilder                     = new ClassBuilder(
+			reflect:           $this->reflect,
+			buildChainFactory: new BuildChainFactory(),
+			reader:            $annotationReader,
+		);
+		$this->instances[ ClassBuilder::class ] = $this->classBuilder;
+		$this->instances[ self::class ]         = $this;
 	}
 
 	/**
@@ -138,19 +150,23 @@ class Container {
 	 *
 	 * @throws Exception If the dependency cannot be resolved.
 	 */
-	private function applyPropertyInjection( object $instance ): void {
+	public function applyPropertyInjection( object $instance ): void {
 		$propertiesToInject = $this->reflect->getAnnotatedProperties( $instance::class, Inject::class );
 
 		foreach ( $propertiesToInject as $property ) {
 			/** @var Inject $annotation */
 			$annotation = $this->reflect->getPropertyAnnotated( $instance::class, $property->name, with: Inject::class );
 
-			$propertyValue = $annotation->args
-				? new ( $property->type )( ...$annotation->args )
-				: $this->getFromArgument( $property );
+			if ( ! empty( $annotation->args ) ) {
+				$value = new ( $property->type )( ...$annotation->args );
+			} elseif ( ! empty( $annotation->class ) ) {
+				$value = $this->get( $annotation->class );
+			} else {
+				$value = $this->get( $property->type );
+			}
 
 			// Set the property value
-			$this->reflect->setPropertyValue( $instance, $property->name, $propertyValue );
+			$this->reflect->setPropertyValue( $instance, $property->name, $value );
 		}
 	}
 

@@ -94,6 +94,7 @@ class MutableKlist extends Mutable {
 
 	public function merge( $value ): MutableKlist {
 		$this->array = array_merge( $value, $this->toArray() );
+		$this->rewind();
 
 		return $this;
 	}

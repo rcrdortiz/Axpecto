@@ -10,10 +10,10 @@ class Kmap extends Immutable {
 	/**
 	 * @var array<string>
 	 */
-	private readonly array $keys;
+	protected array $keys;
 
 	public function __construct(
-		array $array,
+		array $array = [],
 	) {
 		parent::__construct( $array );
 		$this->keys = array_keys( $array );
@@ -25,6 +25,10 @@ class Kmap extends Immutable {
 
 	public function has( string $key ): bool {
 		return isset( $this->array[ $key ] );
+	}
+
+	public function search( mixed $value ): string {
+		return array_search( $value, $this->array, true );
 	}
 
 	public function key(): int {
@@ -109,5 +113,11 @@ class Kmap extends Immutable {
 
 	public function firstOrNull() {
 		return $this->array[ $this->keys[0] ?? 0 ] ?? null;
+	}
+
+	public function maybe( Closure $param ) {
+		$param( $this->array );
+
+		return $this;
 	}
 }

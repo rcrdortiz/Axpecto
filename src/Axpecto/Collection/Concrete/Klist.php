@@ -112,14 +112,18 @@ class Klist extends Immutable {
 		return $this->filter( fn( $element ) => $element );
 	}
 
-	public function merge( $value ): Klist {
-		$data = array_merge( $value, $this->toArray() );
+	public function merge( Klist $klist ): Klist {
+		return $this->mergeArray( $klist->toArray() );
+	}
+
+	public function mergeArray( array $array ): Klist {
+		$data = array_merge( $array, $this->toArray() );
 
 		return new static( $data );
 	}
 
 	public function add( mixed $element ) {
-		return $this->merge( [ $element ] );
+		return $this->mergeArray( [ $element ] );
 	}
 
 	public function diff( Klist $list ): Klist {
@@ -128,10 +132,6 @@ class Klist extends Immutable {
 		$data = array_diff( $data, $list->toArray() );
 
 		return new static( $data );
-	}
-
-	public function join( string $separator ) {
-		return join( $separator, $this->toArray() );
 	}
 
 	public function firstOrNull() {
