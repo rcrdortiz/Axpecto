@@ -77,11 +77,6 @@ class Klist extends Immutable {
 		return false;
 	}
 
-	public function maybe( Closure $predicate ): Klist {
-		count( $this ) > 0 && $predicate( $this );
-		return $this;
-	}
-
 	public function all( Closure $predicate ): bool {
 		foreach ( $this->toArray() as $element ) {
 			if ( ! $predicate( $element ) ) {

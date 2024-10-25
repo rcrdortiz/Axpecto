@@ -3,7 +3,7 @@
 namespace Axpecto\Container\Annotation;
 
 use Attribute;
-use Axpecto\Aop\Annotation;
+use Axpecto\Annotation\Annotation;
 
 /**
  * Class Inject

@@ -1,11 +1,10 @@
 <?php
 
-namespace Axpecto\Aop\BuildHandler;
+namespace Axpecto\MethodExecution\Builder;
 
-use Axpecto\Aop\Annotation;
-use Axpecto\Aop\Build\BuildChain;
-use Axpecto\Aop\Build\BuildOutput;
-use Axpecto\Aop\BuildHandler;
+use Axpecto\Annotation\Annotation;
+use Axpecto\ClassBuilder\BuildContext;
+use Axpecto\ClassBuilder\BuildHandler;
 use Axpecto\Container\Annotation\Inject;
 use Axpecto\Reflection\ReflectionUtils;
 use ReflectionException;
@@ -13,14 +12,12 @@ use ReflectionException;
 /**
  * Class MethodExecutionBuildHandler
  *
- * This class handles method annotations for AOP (Aspect-Oriented Programming) based method execution.
+ * Handles method annotations for AOP (Aspect-Oriented Programming)-based method execution.
  * It intercepts the build chain and adds method signature and interception logic to the BuildOutput.
- *
- * @package Axpecto\Aop\BuildHandler
  */
 class MethodExecutionBuildHandler implements BuildHandler {
 	/**
-	 * MethodExecutionBuilder constructor.
+	 * MethodExecutionBuildHandler constructor.
 	 *
 	 * @param ReflectionUtils $reflect Reflection utility for analyzing classes and methods.
 	 */
@@ -32,39 +29,26 @@ class MethodExecutionBuildHandler implements BuildHandler {
 	/**
 	 * Intercepts a build chain, adding method interception logic to the output.
 	 *
-	 * @param BuildChain  $chain      The build chain to proceed with.
-	 * @param Annotation  $annotation The annotation being processed.
-	 * @param BuildOutput $output     The current build output to modify.
+	 * @param Annotation   $annotation The annotation being processed.
+	 * @param BuildContext $context    The current build context to modify.
 	 *
-	 * @return BuildOutput The modified build output.
 	 * @throws ReflectionException If reflection on the method or class fails.
 	 */
-	public function intercept(
-		BuildChain $chain,
-		Annotation $annotation,
-		BuildOutput $output,
-	): BuildOutput {
-		// Extract class and method from the annotation
+	public function intercept( Annotation $annotation, BuildContext $context ): void {
 		$class  = $annotation->getAnnotatedClass();
 		$method = $annotation->getAnnotatedMethod();
 
-		// Generate the method signature and implementation using reflection
+		// Generate the method signature and implementation using reflection.
 		$signature      = $this->reflect->getMethodDefinitionString( $class, $method );
 		$implementation = $this->generateImplementation( $class, $method );
 
-		// Add the method to the output
-		$output->addMethod( $method, $signature, $implementation );
-
-		// Add the proxy property to the output
-		$proxyProperty = $this->generateProxyProperty();
-		$output->addProperty( MethodExecutionProxy::class, $proxyProperty );
-
-		// Proceed to the next handler in the chain
-		return $chain->proceed();
+		// Add the method and proxy property to the context output.
+		$context->addMethod( $method, $signature, $implementation );
+		$context->addProperty( MethodExecutionProxy::class, $this->generateProxyProperty() );
 	}
 
 	/**
-	 * Generate the method implementation based on the return type.
+	 * Generates the method implementation based on the return type.
 	 *
 	 * @param string $class  The class name being processed.
 	 * @param string $method The method name being processed.
@@ -75,11 +59,11 @@ class MethodExecutionBuildHandler implements BuildHandler {
 	protected function generateImplementation( string $class, string $method ): string {
 		$returnStatement = $this->reflect->getReturnType( $class, $method ) !== 'void' ? 'return ' : '';
 
-		return $returnStatement . "\$this->proxy->handle( '$class', '$method', parent::$method(...), func_get_args() );";
+		return $returnStatement . "\$this->proxy->handle('$class', '$method', parent::$method(...), func_get_args());";
 	}
 
 	/**
-	 * Generate the proxy property string.
+	 * Generates the proxy property string.
 	 *
 	 * @return string The proxy property with an Inject annotation.
 	 */

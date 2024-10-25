@@ -1,6 +1,6 @@
 <?php
 
-namespace Axpecto\Loader;
+namespace Axpecto\ClassLoader;
 
 use Exception;
 use InvalidArgumentException;

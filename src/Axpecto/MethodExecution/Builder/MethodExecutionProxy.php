@@ -1,35 +1,29 @@
 <?php
 
-namespace Axpecto\Aop\BuildHandler;
+namespace Axpecto\MethodExecution\Builder;
 
-use Axpecto\Aop\AnnotationReader;
-use Axpecto\Aop\MethodExecution\ExecutionChainFactory;
-use Axpecto\Aop\MethodExecution\MethodExecutionContext;
+use Axpecto\Annotation\AnnotationReader;
+use Axpecto\MethodExecution\MethodExecutionContext;
 use Axpecto\Reflection\ReflectionUtils;
 use Closure;
 use ReflectionException;
 
 /**
- * Class MethodExecutionInterceptor
+ * Class MethodExecutionProxy
  *
- * This class intercepts method executions, applying annotations that handle additional logic for method calls.
- * It uses annotations and the reflection system to dynamically apply behaviors based on metadata.
- *
- * @package Axpecto\Aop\MethodInterception
+ * Handles the interception of method executions, applying annotations to control or augment the method's behavior.
  */
 class MethodExecutionProxy {
 
 	/**
-	 * MethodExecutionInterceptor constructor.
+	 * MethodExecutionProxy constructor.
 	 *
-	 * @param ReflectionUtils       $reflect The reflection utility instance for handling class/method reflection.
-	 * @param AnnotationReader      $reader
-	 * @param ExecutionChainFactory $chainFactory
+	 * @param ReflectionUtils  $reflect The reflection utility instance for handling class/method reflection.
+	 * @param AnnotationReader $reader  Reads annotations for the given class and method.
 	 */
 	public function __construct(
 		private readonly ReflectionUtils $reflect,
 		private readonly AnnotationReader $reader,
-		private readonly ExecutionChainFactory $chainFactory,
 	) {
 	}
 
@@ -59,15 +53,16 @@ class MethodExecutionProxy {
 		// Resolve method arguments using reflection
 		$mappedArguments = $this->reflect->mapValuesToArguments( $class, $method, $arguments );
 
-		// Create the method context
-		$methodExecutionContext = new MethodExecutionContext(
+		// Create and initialize the method execution context
+		$context = new MethodExecutionContext(
 			className:  $class,
 			methodName: $method,
 			methodCall: $methodCall,
-			arguments:  $mappedArguments
+			arguments:  $mappedArguments,
+			queue:      $annotations,
 		);
 
-		// Create the execution chain and proceed with the method call stack
-		return $this->chainFactory->get( $annotations )->proceed( $methodExecutionContext );
+		// Delegate the execution to the context, which will handle proceeding through annotations
+		return $context->proceed();
 	}
 }

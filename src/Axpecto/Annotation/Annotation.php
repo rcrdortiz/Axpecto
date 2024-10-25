@@ -1,8 +1,10 @@
 <?php
 
-namespace Axpecto\Aop;
+namespace Axpecto\Annotation;
 
 use Attribute;
+use Axpecto\ClassBuilder\BuildHandler;
+use Axpecto\MethodExecution\MethodExecutionHandler;
 
 /**
  * Class Annotation

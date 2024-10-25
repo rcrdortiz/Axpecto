@@ -1,10 +1,9 @@
 <?php
 
-namespace Axpecto\Build;
+namespace Axpecto\ClassBuilder;
 
-use Axpecto\Aop\AnnotationReader;
-use Axpecto\Aop\Build\BuildChainFactory;
-use Axpecto\Aop\Build\BuildOutput;
+use Axpecto\Annotation\Annotation;
+use Axpecto\Annotation\AnnotationReader;
 use Axpecto\Container\Exception\ClassAlreadyBuiltException;
 use Axpecto\Reflection\ReflectionUtils;
 use ReflectionException;
@@ -19,13 +18,11 @@ use ReflectionException;
 class ClassBuilder {
 
 	/**
-	 * @param ReflectionUtils       $reflect           Utility for handling reflection of classes, methods, and properties.
-	 * @param BuildChainFactory     $buildChainFactory Factory for creating build chains.
-	 * @param array<string, string> $builtClasses      Stores already built classes to avoid duplication.
+	 * @param ReflectionUtils       $reflect      Utility for handling reflection of classes, methods, and properties.
+	 * @param array<string, string> $builtClasses Stores already built classes to avoid duplication.
 	 */
 	public function __construct(
 		private readonly ReflectionUtils $reflect,
-		private readonly BuildChainFactory $buildChainFactory,
 		private readonly AnnotationReader $reader,
 		private array $builtClasses = [],
 	) {
@@ -50,15 +47,16 @@ class ClassBuilder {
 		$buildAnnotations = $this->reader->getAllBuildAnnotations( $class );
 
 		// Create and proceed with the build chain
-		$buildOutput = $this->buildChainFactory->get( $buildAnnotations )->proceed();
+		$context = new BuildContext();
+		$buildAnnotations->foreach( fn( Annotation $a ) => $a->getBuilder()?->intercept( $a, $context ) );
 
 		// If the build output is empty, return the original class
-		if ( $buildOutput->isEmpty() ) {
+		if ( $context->isEmpty() ) {
 			return $class;
 		}
 
 		// Generate and evaluate the proxy class
-		$proxiedClass = $this->generateProxyClass( $class, $buildOutput );
+		$proxiedClass = $this->generateProxyClass( $class, $context );
 
 		// Cache the built class
 		$this->builtClasses[ $class ] = $proxiedClass;
@@ -73,13 +71,13 @@ class ClassBuilder {
 	 * This method constructs the class declaration and body, including properties and methods as defined by the build output.
 	 * It also evaluates the generated class code dynamically using `eval`.
 	 *
-	 * @param string      $class       The original class name to be proxied.
-	 * @param BuildOutput $buildOutput The output from the build process, containing properties and methods.
+	 * @param string       $class       The original class name to be proxied.
+	 * @param BuildContext $buildOutput The output from the build process, containing properties and methods.
 	 *
 	 * @return string The name of the generated proxy class.
 	 * @throws ReflectionException
 	 */
-	private function generateProxyClass( string $class, BuildOutput $buildOutput ): string {
+	private function generateProxyClass( string $class, BuildContext $buildOutput ): string {
 		// Generate a unique proxy class name by replacing backslashes in the class name.
 		$proxiedClassName = str_replace( "\\", '_', $class );
 

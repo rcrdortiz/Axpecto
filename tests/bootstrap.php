@@ -1,9 +1,9 @@
 <?php
 
-use Axpecto\Loader\FileSystemClassLoader;
+use Axpecto\ClassLoader\FileSystemClassLoader;
 
 require_once dirname( __FILE__, 2 ) . '/vendor/autoload.php';
-require_once dirname( __FILE__, 2 ) . '/src/Axpecto/Loader/FileSystemClassLoader.php';
+require_once dirname( __FILE__, 2 ) . '/src/Axpecto/ClassLoader/FileSystemClassLoader.php';
 require_once dirname( __FILE__, 2 ) . '/src/functions.php';
 
 $clasLoader = new FileSystemClassLoader();

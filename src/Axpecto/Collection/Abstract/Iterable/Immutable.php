@@ -3,9 +3,9 @@
 namespace Axpecto\Collection\Abstract\Iterable;
 
 use ArrayAccess;
+use Axpecto\Collection\Concrete\Kmap;
 use Closure;
 use Countable;
-use Axpecto\Collection\Concrete\Kmap;
 use Exception;
 use Iterator;
 use JsonSerializable;
@@ -64,7 +64,7 @@ abstract class Immutable implements ArrayAccess, Countable, Iterator, JsonSerial
 		return isset( $this->array[ $offset ] );
 	}
 
-	public function ifNotEmpty( Closure $block): static {
+	public function ifNotEmpty( Closure $block ): static {
 		if ( $this->array ) {
 			$block( $this->array );
 		}
@@ -72,7 +72,7 @@ abstract class Immutable implements ArrayAccess, Countable, Iterator, JsonSerial
 		return $this;
 	}
 
-	public function ifEmpty( Closure $block): static {
+	public function ifEmpty( Closure $block ): static {
 		if ( ! $this->array ) {
 			$block( $this->array );
 		}
@@ -129,5 +129,11 @@ abstract class Immutable implements ArrayAccess, Countable, Iterator, JsonSerial
 
 	public function join( string $separator ) {
 		return join( $separator, $this->toArray() );
+	}
+
+	public function maybe( Closure $predicate ): static {
+		count( $this ) > 0 && $predicate( $this );
+
+		return $this;
 	}
 }

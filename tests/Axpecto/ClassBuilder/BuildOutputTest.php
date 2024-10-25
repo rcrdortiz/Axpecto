@@ -1,6 +1,6 @@
 <?php
 
-namespace Axpecto\Aop\Build;
+namespace Axpecto\ClassBuilder;
 
 use Axpecto\Collection\Concrete\Kmap;
 use Axpecto\Collection\Concrete\MutableKmap;
@@ -17,7 +17,7 @@ class BuildOutputTest extends TestCase {
 		$this->propertiesMock = $this->createMock( MutableKmap::class );
 
 		// Instantiate BuildOutput with the mocks
-		$this->buildOutput = new BuildOutput( $this->methodsMock, $this->propertiesMock );
+		$this->buildOutput = new BuildContext( $this->methodsMock, $this->propertiesMock );
 	}
 
 	public function testAddMethod(): void {

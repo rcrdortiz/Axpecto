@@ -1,6 +1,6 @@
 <?php
 
-namespace Axpecto\Aop\Build;
+namespace Axpecto\ClassBuilder;
 
 use Axpecto\Collection\Concrete\Kmap;
 use Axpecto\Collection\Concrete\MutableKmap;
@@ -19,7 +19,7 @@ use Axpecto\Collection\Concrete\MutableKmap;
  *
  * @package Axpecto\Aop\Build
  */
-class BuildOutput {
+class BuildContext {
 
 	/**
 	 * Constructor for the BuildOutput class.

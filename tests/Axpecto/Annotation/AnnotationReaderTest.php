@@ -1,6 +1,6 @@
 <?php
 
-namespace Axpecto\Aop;
+namespace Axpecto\Annotation;
 
 use Axpecto\Container\Container;
 use Axpecto\Reflection\ReflectionUtils;

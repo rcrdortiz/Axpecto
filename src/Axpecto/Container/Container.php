@@ -2,9 +2,8 @@
 
 namespace Axpecto\Container;
 
-use Axpecto\Aop\AnnotationReader;
-use Axpecto\Aop\Build\BuildChainFactory;
-use Axpecto\Build\ClassBuilder;
+use Axpecto\Annotation\AnnotationReader;
+use Axpecto\ClassBuilder\ClassBuilder;
 use Axpecto\Container\Annotation\Inject;
 use Axpecto\Container\Exception\AutowireDependencyException;
 use Axpecto\Container\Exception\CircularReferenceException;
@@ -59,14 +58,13 @@ class Container {
 
 		$annotationReader                           = new AnnotationReader(
 			container: $this,
-			reflect:   $this->reflect
+			reflect:   $this->reflect,
 		);
 		$this->instances[ AnnotationReader::class ] = $annotationReader;
 
 		$this->classBuilder                     = new ClassBuilder(
-			reflect:           $this->reflect,
-			buildChainFactory: new BuildChainFactory(),
-			reader:            $annotationReader,
+			reflect: $this->reflect,
+			reader:  $annotationReader,
 		);
 		$this->instances[ ClassBuilder::class ] = $this->classBuilder;
 		$this->instances[ self::class ]         = $this;

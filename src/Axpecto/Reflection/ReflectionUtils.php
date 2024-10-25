@@ -3,7 +3,7 @@
 namespace Axpecto\Reflection;
 
 use Attribute;
-use Axpecto\Aop\Annotation;
+use Axpecto\Annotation\Annotation;
 use Axpecto\Collection\Concrete\Klist;
 use Axpecto\Collection\Concrete\Kmap;
 use Axpecto\Reflection\Dto\Argument;

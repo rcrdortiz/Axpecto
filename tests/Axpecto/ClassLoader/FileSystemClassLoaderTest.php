@@ -1,7 +1,7 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
-use Axpecto\Loader\FileSystemClassLoader;
+use Axpecto\ClassLoader\FileSystemClassLoader;
 use TestNamespace\TestClass;
 
 class FileSystemClassLoaderTest extends TestCase {

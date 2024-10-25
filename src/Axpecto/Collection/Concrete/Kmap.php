@@ -114,10 +114,4 @@ class Kmap extends Immutable {
 	public function firstOrNull() {
 		return $this->array[ $this->keys[0] ?? 0 ] ?? null;
 	}
-
-	public function maybe( Closure $param ) {
-		$param( $this->array );
-
-		return $this;
-	}
 }

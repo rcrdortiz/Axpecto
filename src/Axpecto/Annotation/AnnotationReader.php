@@ -1,6 +1,6 @@
 <?php
 
-namespace Axpecto\Aop;
+namespace Axpecto\Annotation;
 
 use Axpecto\Collection\Concrete\Klist;
 use Axpecto\Container\Container;
