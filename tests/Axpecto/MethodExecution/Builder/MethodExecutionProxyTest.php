@@ -38,7 +38,7 @@ class MethodExecutionProxyTest extends TestCase {
 			->expects( $this->once() )
 			->method( 'getMethodExecutionAnnotations' )
 			->with( $class, $method )
-			->willReturn( new \Axpecto\Collection\Concrete\Klist() );
+			->willReturn( new \Axpecto\Collection\Klist() );
 
 		// Mock reflection to map the method arguments correctly
 		$this->reflectionUtilsMock
@@ -73,7 +73,7 @@ class MethodExecutionProxyTest extends TestCase {
 			->willReturn( $handlerMock );
 
 		// Mock annotations (single annotation for the method)
-		$annotations = new \Axpecto\Collection\Concrete\Klist( [ $annotationMock ] );
+		$annotations = new \Axpecto\Collection\Klist( [ $annotationMock ] );
 		$this->annotationReaderMock
 			->expects( $this->once() )
 			->method( 'getMethodExecutionAnnotations' )
@@ -127,7 +127,7 @@ class MethodExecutionProxyTest extends TestCase {
 			->willReturn( $handlerMock2 );
 
 		// Mock annotations (two annotations for the method)
-		$annotations = new \Axpecto\Collection\Concrete\Klist( [ $annotationMock1, $annotationMock2 ] );
+		$annotations = new \Axpecto\Collection\Klist( [ $annotationMock1, $annotationMock2 ] );
 		$this->annotationReaderMock
 			->expects( $this->once() )
 			->method( 'getMethodExecutionAnnotations' )

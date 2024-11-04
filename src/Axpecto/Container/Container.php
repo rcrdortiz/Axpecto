@@ -105,7 +105,7 @@ class Container {
 	 *
 	 * @param string $dependencyName The name of the dependency.
 	 *
-	 * @return mixed The resolved dependency.
+	 * @return mixed|T The resolved dependency.
 	 * @throws Exception If the dependency cannot be resolved.
 	 */
 	public function get( string $dependencyName ): mixed {

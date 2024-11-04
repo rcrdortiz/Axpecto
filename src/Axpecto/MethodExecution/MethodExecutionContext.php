@@ -3,10 +3,8 @@
 namespace Axpecto\MethodExecution;
 
 use Axpecto\Annotation\Annotation;
-use Axpecto\Collection\Concrete\Klist;
-use Axpecto\Collection\Concrete\MutableKlist;
+use Axpecto\Collection\Klist;
 use Closure;
-use Fiber;
 
 /**
  * Class MethodExecutionContext

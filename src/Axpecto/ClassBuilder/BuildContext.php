@@ -2,8 +2,7 @@
 
 namespace Axpecto\ClassBuilder;
 
-use Axpecto\Collection\Concrete\Kmap;
-use Axpecto\Collection\Concrete\MutableKmap;
+use Axpecto\Collection\Kmap;
 
 /**
  * Class BuildOutput
@@ -24,12 +23,12 @@ class BuildContext {
 	/**
 	 * Constructor for the BuildOutput class.
 	 *
-	 * @param MutableKmap $methods    List of methods in the output.
-	 * @param MutableKmap $properties List of class properties in the output.
+	 * @param Kmap $methods    List of methods in the output.
+	 * @param Kmap $properties List of class properties in the output.
 	 */
 	public function __construct(
-		public readonly MutableKmap $methods = new MutableKmap(),
-		public readonly MutableKmap $properties = new MutableKmap(),
+		public readonly Kmap $methods = new Kmap( mutable: true ),
+		public readonly Kmap $properties = new Kmap( mutable: true ),
 	) {
 	}
 

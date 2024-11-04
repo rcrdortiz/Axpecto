@@ -3,7 +3,7 @@
 namespace Axpecto\MethodExecution;
 
 use Axpecto\Annotation\Annotation;
-use Axpecto\Collection\Concrete\Klist;
+use Axpecto\Collection\Klist;
 use PHPUnit\Framework\TestCase;
 
 class MethodExecutionContextTest extends TestCase {

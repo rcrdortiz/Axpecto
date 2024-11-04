@@ -1,8 +1,7 @@
 <?php
 
-use Axpecto\Collection\Concrete\Klist;
-use Axpecto\Collection\Concrete\Kmap;
-use Axpecto\Collection\Concrete\MutableKlist;
+use Axpecto\Collection\Klist;
+use Axpecto\Collection\Kmap;
 
 function listOf( ...$elements ): Klist {
 	return new Klist( $elements );
@@ -16,16 +15,16 @@ function emptyList(): Klist {
 	return new Klist( [] );
 }
 
-function mutable_list_of( ...$elements ): MutableKlist {
-	return new MutableKlist( $elements );
+function mutableListOf( ...$elements ): Klist {
+	return new Klist( $elements, true );
 }
 
-function mutable_list_from( array $array ): MutableKlist {
-	return new MutableKlist( $array );
+function mutableListFrom( array $array ): Klist {
+	return new Klist( $array, true );
 }
 
-function mutable_empty_list(): MutableKlist {
-	return new MutableKlist( [] );
+function mutableEmptyList(): Klist {
+	return new Klist( [], true );
 }
 
 function mapOf( array $map ): Kmap {
@@ -34,4 +33,12 @@ function mapOf( array $map ): Kmap {
 
 function emptyMap(): Kmap {
 	return new Kmap( [] );
+}
+
+function mutableMapOf( array $map ): Kmap {
+	return new Kmap( $map, true );
+}
+
+function mutableEmptyMap(): Kmap {
+	return new Kmap( [], true );
 }

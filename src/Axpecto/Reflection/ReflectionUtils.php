@@ -4,8 +4,8 @@ namespace Axpecto\Reflection;
 
 use Attribute;
 use Axpecto\Annotation\Annotation;
-use Axpecto\Collection\Concrete\Klist;
-use Axpecto\Collection\Concrete\Kmap;
+use Axpecto\Collection\Klist;
+use Axpecto\Collection\Kmap;
 use Axpecto\Reflection\Dto\Argument;
 use ReflectionAttribute;
 use ReflectionClass;

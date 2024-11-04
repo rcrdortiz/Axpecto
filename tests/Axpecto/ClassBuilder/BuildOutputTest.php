@@ -2,8 +2,8 @@
 
 namespace Axpecto\ClassBuilder;
 
-use Axpecto\Collection\Concrete\Kmap;
-use Axpecto\Collection\Concrete\MutableKmap;
+use Axpecto\Collection\Kmap;
+use Axpecto\Collection\MutableKmap;
 use PHPUnit\Framework\TestCase;
 
 class BuildOutputTest extends TestCase {

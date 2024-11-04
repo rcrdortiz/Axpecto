@@ -2,7 +2,7 @@
 
 namespace Axpecto\Annotation;
 
-use Axpecto\Collection\Concrete\Klist;
+use Axpecto\Collection\Klist;
 use Axpecto\Container\Container;
 use Axpecto\Reflection\ReflectionUtils;
 use Exception;
