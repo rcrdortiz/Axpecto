@@ -25,6 +25,7 @@ class Klist implements CollectionInterface {
 
 	public function filter( Closure $predicate ): static {
 		$map = $this->internalMap->filter( fn( $key, $value ) => $predicate( $value ) );
+		$map->resetKeys();
 
 		if ( ! $this->mutable ) {
 			return new static( $map->toArray(), $this->mutable );

@@ -229,4 +229,9 @@ class Kmap implements CollectionInterface {
 	public function add( $key, mixed $element ) {
 		$this->offsetSet( $key, $element );
 	}
+
+	public function resetKeys() {
+		$this->array = array_values( $this->array );
+		$this->keys  = array_keys( $this->array );
+	}
 }

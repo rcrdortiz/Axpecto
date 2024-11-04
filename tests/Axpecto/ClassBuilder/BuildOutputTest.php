@@ -3,7 +3,6 @@
 namespace Axpecto\ClassBuilder;
 
 use Axpecto\Collection\Kmap;
-use Axpecto\Collection\MutableKmap;
 use PHPUnit\Framework\TestCase;
 
 class BuildOutputTest extends TestCase {
@@ -13,8 +12,8 @@ class BuildOutputTest extends TestCase {
 
 	protected function setUp(): void {
 		// Create mock for MutableKmap for methods and properties
-		$this->methodsMock    = $this->createMock( MutableKmap::class );
-		$this->propertiesMock = $this->createMock( MutableKmap::class );
+		$this->methodsMock    = $this->createMock( Kmap::class );
+		$this->propertiesMock = $this->createMock( Kmap::class );
 
 		// Instantiate BuildOutput with the mocks
 		$this->buildOutput = new BuildContext( $this->methodsMock, $this->propertiesMock );

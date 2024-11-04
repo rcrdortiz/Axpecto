@@ -58,7 +58,8 @@ class MethodExecutionContext {
 	 * @return mixed The result of the method or the interception logic.
 	 */
 	public function proceed(): mixed {
-		$annotation              = $this->queue->nextElement();
+		$annotation = $this->queue->current();
+		$this->queue->next();
 		$this->currentAnnotation = $annotation;
 
 		if ( ! $annotation instanceof Annotation ) {

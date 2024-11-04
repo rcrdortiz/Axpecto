@@ -7,7 +7,7 @@ use Axpecto\Annotation\AnnotationReader;
 use Axpecto\ClassBuilder\BuildContext;
 use Axpecto\ClassBuilder\ClassBuilder;
 use Axpecto\Collection\Klist;
-use Axpecto\Collection\MutableKmap;
+use Axpecto\Collection\Kmap;
 use Axpecto\Container\Exception\ClassAlreadyBuiltException;
 use Axpecto\Reflection\ReflectionUtils;
 use PHPUnit\Framework\TestCase;
@@ -103,8 +103,8 @@ class ClassBuilderTest extends TestCase {
 	public function testGenerateProxyClass(): void {
 		$class       = SampleClass::class;
 		$buildOutput = new BuildContext(
-			new MutableKmap( [ 'testMethod' => 'public function testMethod() {}' ] ),
-			new MutableKmap( [ 'proxy' => '#[Inject] private MethodExecutionProxy $proxy;' ] )
+			new Kmap( [ 'testMethod' => 'public function testMethod() {}' ] ),
+			new Kmap( [ 'proxy' => '#[Inject] private MethodExecutionProxy $proxy;' ] )
 		);
 
 		// Mock reflection to indicate the class is not an interface
