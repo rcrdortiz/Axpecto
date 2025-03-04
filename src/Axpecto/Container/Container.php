@@ -103,9 +103,9 @@ class Container {
 	/**
 	 * Retrieves a dependency from the container.
 	 *
-	 * @param string $dependencyName The name of the dependency.
+	 * @param string<T> | string $dependencyName The name of the dependency.
 	 *
-	 * @return mixed|T The resolved dependency.
+	 * @return T| mixed The resolved dependency.
 	 * @throws Exception If the dependency cannot be resolved.
 	 */
 	public function get( string $dependencyName ): mixed {
@@ -233,6 +233,7 @@ class Container {
 	 * @throws AutowireDependencyException If the class cannot be built.
 	 */
 	private function buildClass( string $dependency ): string {
+		$dependency = $this->bindings[ $dependency ] ?? $dependency;
 		try {
 			$class = $this->classBuilder->build( $dependency );
 			$this->bind( $dependency, $class );

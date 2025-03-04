@@ -16,7 +16,7 @@ class BuildOutputTest extends TestCase {
 		$this->propertiesMock = $this->createMock( Kmap::class );
 
 		// Instantiate BuildOutput with the mocks
-		$this->buildOutput = new BuildContext( $this->methodsMock, $this->propertiesMock );
+		$this->buildOutput = new BuildContext( 'AnyClass', $this->methodsMock, $this->propertiesMock );
 	}
 
 	public function testAddMethod(): void {

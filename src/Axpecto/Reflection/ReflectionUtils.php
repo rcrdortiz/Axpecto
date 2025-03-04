@@ -47,8 +47,6 @@ class ReflectionUtils {
 				$definition = ( $arg->hasType() ? $arg->getType() . ' ' : '' ) . ( $arg->isVariadic() ? '...' : '' ) . "\${$arg->getName()}";
 				if ( $arg->isDefaultValueAvailable() ) {
 					$definition .= " = " . var_export( $arg->getDefaultValue(), true );
-				} elseif ( ! $arg->isVariadic() ) {
-					$definition .= " = null";
 				}
 
 				return $definition;
@@ -131,6 +129,51 @@ class ReflectionUtils {
 		return $this->getAnnotations(
 			attributes:      $this->getAttributes( $class ),
 			target:          Attribute::TARGET_CLASS,
+			annotationClass: $annotationClass
+		);
+	}
+
+	/**
+	 * Fetches annotations for a parameter.
+	 *
+	 * @param class-string $class           The class name.
+	 * @param string       $method          The method name (use "__construct" for constructor).
+	 * @param string       $parameterName   The parameter name.
+	 * @param string       $annotationClass The annotation class to filter by.
+	 *
+	 * @return Klist<Annotation>
+	 * @throws ReflectionException
+	 */
+	public function getParamAnnotations(
+		string $class,
+		string $method,
+		string $parameterName,
+		string $annotationClass = Annotation::class
+	): Klist {
+		// Get the reflection of the specified method.
+		$reflectionMethod = $this->getReflectionClass( $class )->getMethod( $method );
+
+		// Find the parameter by name.
+		$reflectionParameter = null;
+		foreach ( $reflectionMethod->getParameters() as $parameter ) {
+			if ( $parameter->getName() === $parameterName ) {
+				$reflectionParameter = $parameter;
+				break;
+			}
+		}
+
+		if ( $reflectionParameter === null ) {
+			throw new ReflectionException( "Parameter {$parameterName} not found in method {$method} of class {$class}" );
+		}
+
+		// Get attributes from the parameter.
+		$attributes = listFrom( $reflectionParameter->getAttributes() );
+
+		// Filter the annotations by target.
+		// For parameters, the target is Attribute::TARGET_PARAMETER.
+		return $this->getAnnotations(
+			attributes:      $attributes,
+			target:          Attribute::TARGET_PARAMETER,
 			annotationClass: $annotationClass
 		);
 	}
@@ -294,14 +337,31 @@ class ReflectionUtils {
 	/**
 	 * Converts a ReflectionProperty or ReflectionParameter into an Argument DTO.
 	 *
-	 * @param ReflectionProperty|ReflectionParameter $property
+	 * @param ReflectionProperty|ReflectionParameter $reflection
 	 *
 	 * @return Argument
+	 *
+	 * @TODO Fix multivalued argument type.
 	 */
-	private function reflectionToArgument( ReflectionProperty|ReflectionParameter $property ): Argument {
+	private function reflectionToArgument( ReflectionProperty|ReflectionParameter $reflection ): Argument {
+		$name    = $reflection->getName();
+		$type    = $reflection->getType()?->getName() ?? 'mixed';
+		$default = null;
+
+		if ( $reflection instanceof ReflectionParameter ) {
+			if ( $reflection->isDefaultValueAvailable() ) {
+				$default = $reflection->getDefaultValue();
+			}
+		} elseif ( $reflection instanceof ReflectionProperty ) {
+			if ( $reflection->hasDefaultValue() ) {
+				$default = $reflection->getDefaultValue();
+			}
+		}
+
 		return new Argument(
-			name: $property->getName(),
-			type: $property->getType()?->getName() ?? 'mixed',
+			name:    $name,
+			type:    $type,
+			default: $default
 		);
 	}
 

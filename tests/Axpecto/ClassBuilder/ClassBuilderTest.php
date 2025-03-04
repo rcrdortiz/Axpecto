@@ -103,6 +103,7 @@ class ClassBuilderTest extends TestCase {
 	public function testGenerateProxyClass(): void {
 		$class       = SampleClass::class;
 		$buildOutput = new BuildContext(
+			$class,
 			new Kmap( [ 'testMethod' => 'public function testMethod() {}' ] ),
 			new Kmap( [ 'proxy' => '#[Inject] private MethodExecutionProxy $proxy;' ] )
 		);

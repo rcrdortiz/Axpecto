@@ -3,6 +3,7 @@
 namespace Axpecto\ClassBuilder;
 
 use Axpecto\Collection\Kmap;
+use Axpecto\Container\Annotation\Inject;
 
 /**
  * Class BuildOutput
@@ -27,8 +28,10 @@ class BuildContext {
 	 * @param Kmap $properties List of class properties in the output.
 	 */
 	public function __construct(
+		public readonly string $class,
 		public readonly Kmap $methods = new Kmap( mutable: true ),
 		public readonly Kmap $properties = new Kmap( mutable: true ),
+		public readonly Kmap $traits = new Kmap( mutable: true ),
 	) {
 	}
 
@@ -60,6 +63,23 @@ class BuildContext {
 	}
 
 	/**
+	 * Inject a property into the output.
+	 *
+	 * @param string $name
+	 * @param string $class
+	 *
+	 * @return string Reference to variable.
+	 */
+	public function injectProperty( string $name, string $class ): string {
+		$this->addProperty(
+			name:           $class,
+			implementation: "#[" . Inject::class . "] private $class \$$name;",
+		);
+
+		return $name;
+	}
+
+	/**
 	 * Append additional methods and properties to the current output.
 	 * Modifies the internal state directly by merging.
 	 *
@@ -79,6 +99,17 @@ class BuildContext {
 	 * @return bool Returns true if there is any output, false otherwise.
 	 */
 	public function isEmpty(): bool {
-		return $this->methods->isEmpty() && $this->properties->isEmpty();
+		return $this->methods->isEmpty() && $this->properties->isEmpty() && $this->traits->isEmpty();
+	}
+
+	/**
+	 * Add a trait to the output.
+	 *
+	 * @param string $trait
+	 *
+	 * @return void
+	 */
+	public function addTrait( string $trait ): void {
+		$this->traits->add( $trait, $trait );
 	}
 }

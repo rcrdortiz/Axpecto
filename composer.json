@@ -1,6 +1,6 @@
 {
     "name": "rcrdortiz/axpecto",
-    "description": "PHP components for building modern development frameworks easily.",
+    "description": "PHP meta framework for building modern, AI oriented, aspect orientated development frameworks.",
     "type": "library",
     "version": "1.0.2",
     "require": {
@@ -8,6 +8,11 @@
     },
     "require-dev": {
         "phpunit/phpunit": "^10.4"
+    },
+    "autoload": {
+        "files": [
+            "src/load.php"
+        ]
     },
     "license": "GNU",
     "authors": [

@@ -19,7 +19,7 @@ class Kmap implements CollectionInterface {
 	}
 
 	public function current(): mixed {
-		return $this->array[ $this->keys[ $this->index ] ] ?? null;
+		return $this->valid() ? $this->array[$this->index] : null;
 	}
 
 	public function key(): mixed {
@@ -161,6 +161,9 @@ class Kmap implements CollectionInterface {
 		return mapOf( $data );
 	}
 
+	/**
+	 * @throws Exception
+	 */
 	public function join( string $separator ): string {
 		if ( $this->any( fn( $element ) => ! is_string( $element ) ) ) {
 			throw new Exception( "Cannot join non-string elements" );

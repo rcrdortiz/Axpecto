@@ -2,12 +2,8 @@
 
 use Axpecto\ClassLoader\FileSystemClassLoader;
 use Axpecto\Container\Container;
-use Axpecto\Test;
 
-// Set display errors to true
-ini_set( 'display_errors', '1' );
-
-// Define Reparo constants.
+// Define Axpecto constants.
 const AXPECTO_SRC_PATH  = __DIR__ . '/Axpecto/';
 const AXPECTO_NAMESPACE = 'Axpecto';
 

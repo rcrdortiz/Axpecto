@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit bootstrap="tests/bootstrap.php">
+<phpunit bootstrap="tests/bootstrap.php"
+         displayDetailsOnTestsThatTriggerWarnings="true">
     <testsuites>
         <testsuite name="Enxp">
             <directory>tests</directory>
@@ -9,9 +10,9 @@
     <!-- Optional settings -->
     <php>
         <!-- Example setting for error reporting -->
-        <ini name="error_reporting" value="-1" />
+        <ini name="error_reporting" value="-1"/>
 
         <!-- Example setting for display_errors -->
-        <ini name="display_errors" value="1" />
+        <ini name="display_errors" value="1"/>
     </php>
 </phpunit>

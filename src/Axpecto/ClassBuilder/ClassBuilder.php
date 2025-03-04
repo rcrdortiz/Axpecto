@@ -47,7 +47,7 @@ class ClassBuilder {
 		$buildAnnotations = $this->reader->getAllBuildAnnotations( $class );
 
 		// Create and proceed with the build chain
-		$context = new BuildContext();
+		$context = new BuildContext( $class );
 		$buildAnnotations->foreach( fn( Annotation $a ) => $a->getBuilder()?->intercept( $a, $context ) );
 
 		// If the build output is empty, return the original class
@@ -84,12 +84,18 @@ class ClassBuilder {
 		// Define whether the proxy class extends or implements the original class.
 		$inheritanceType = $this->reflect->isInterface( $class ) ? 'implements' : 'extends';
 
+		$traits = '';
+		if ( $buildOutput->traits->isNotEmpty() ) {
+			$traits = "\tuse " . $buildOutput->traits->join( "," ) . ';';
+		}
+
 		// Construct the full class definition.
 		$proxiedClass = sprintf(
-			"\nclass %s %s %s {\n%s\n%s\n}",
+			"\nclass %s %s %s {\n%s\n%s\n%s\n}",
 			$proxiedClassName,
 			$inheritanceType,
 			$class,
+			$traits,
 			"\t" . $buildOutput->properties->join( "\n\t" ),
 			"\t" . $buildOutput->methods->join( "\n\t" ),
 		);
