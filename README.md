@@ -173,15 +173,10 @@ class ReportGenerator {
     }
 }
 
-$reporter = $container->get(ReportGenerator::class);php
-class ReportGenerator {
-    #[Inject]
-    private LoggerInterface $logger;
+$reporter = $container->get(ReportGenerator::class);
 
-    public function generate() {
-        $this->logger->info("Report generated");
-    }
-}
+// Generate reports
+$reporter->generate();
 ```
 
 #### Property Injection (when constructor-based injection is not ideal)
