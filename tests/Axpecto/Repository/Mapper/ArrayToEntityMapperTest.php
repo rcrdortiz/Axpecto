@@ -1,22 +1,16 @@
 <?php
 
 use Axpecto\Collection\Klist;
-use Axpecto\Reflection\Dto\Argument;
-use Axpecto\Reflection\ReflectionUtils;
 use Axpecto\Repository\Mapper\ArrayToEntityMapper;
-use Axpecto\Storage\Entity\Mapping;
+use Axpecto\Storage\Entity\EntityField;
+use Axpecto\Storage\Entity\EntityMetadataService;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Dummy entity class for testing.
  */
 class DummyEntity {
-	/**
-	 * @param int    $id Mapped from 'dummy_field'
-	 * @param string $name
-	 */
 	public function __construct(
-		#[Mapping( 'dummy_field' )]
 		public int $id,
 		public string $name
 	) {
@@ -29,52 +23,47 @@ class DummyEntity {
 class ArrayToEntityMapperTest extends TestCase {
 
 	public function testMap(): void {
-		// Prepare a Klist of constructor arguments.
-		$constructorArguments = new Klist( [
-			                                   new Argument( 'id', 'int', false, null ),
-			                                   new Argument( 'name', 'string', false, null ),
-		                                   ] );
+		// Create two EntityField definitions simulating metadata extracted by EntityMetadataService
+		$fieldId = new EntityField(
+			name:               'id',
+			type:               'int',
+			nullable:           false,
+			entityClass:        DummyEntity::class,
+			default:            EntityField::NO_DEFAULT_VALUE_SPECIFIED,
+			persistenceMapping: 'dummy_field'
+		);
 
-		// Prepare Klist for the Mapping annotation:
-		// For 'id', we want to map to 'dummy_field'.
-		$mappingForId = new Klist( [
-			                           new Mapping( 'dummy_field' ),
-		                           ] );
-		// For 'name', assume no Mapping annotation.
-		$emptyMapping = new Klist( [] );
+		$fieldName = new EntityField(
+			name:               'name',
+			type:               'string',
+			nullable:           false,
+			entityClass:        DummyEntity::class,
+			default:            EntityField::NO_DEFAULT_VALUE_SPECIFIED,
+			persistenceMapping: 'name' // default mapping matches property name
+		);
 
-		// Create a mock ReflectionUtils.
-		$reflectionUtils = $this->createMock( ReflectionUtils::class );
+		// Create a mock for EntityMetadataService
+		$metadataService = $this->createMock( EntityMetadataService::class );
 
-		// Stub getConstructorArguments() to return our constructor arguments.
-		$reflectionUtils->expects( $this->once() )
-		                ->method( 'getConstructorArguments' )
+		// Expect getFields to return a Klist of EntityField objects
+		$metadataService->expects( $this->once() )
+		                ->method( 'getFields' )
 		                ->with( DummyEntity::class )
-		                ->willReturn( $constructorArguments );
+		                ->willReturn( new Klist( [ $fieldId, $fieldName ] ) );
 
-		// Stub getParamAnnotations() to return the mapping for 'id' and empty for 'name'.
-		$reflectionUtils->method( 'getParamAnnotations' )
-		                ->willReturnCallback( function ( $entityClass, $methodName, $paramName, $annotationClass ) use ( $mappingForId, $emptyMapping ) {
-			                if ( $entityClass === DummyEntity::class && $methodName === '__construct' && $paramName === 'id' && $annotationClass === Mapping::class ) {
-				                return $mappingForId;
-			                }
+		// Instantiate the mapper
+		$mapper = new ArrayToEntityMapper( $metadataService );
 
-			                return $emptyMapping;
-		                } );
-
-		// Instantiate the mapper.
-		$mapper = new ArrayToEntityMapper( $reflectionUtils );
-
-		// Data array using the database field name for the id.
+		// Input data array using database field names
 		$data = [
 			'dummy_field' => 123,
 			'name'        => 'John Doe',
 		];
 
-		// Map the data to a DummyEntity instance.
+		// Map the data to a DummyEntity instance
 		$entity = $mapper->mapEntityFromArray( DummyEntity::class, $data );
 
-		// Assert that the returned entity is an instance of DummyEntity with the expected values.
+		// Assertions
 		$this->assertInstanceOf( DummyEntity::class, $entity );
 		$this->assertEquals( 123, $entity->id );
 		$this->assertEquals( 'John Doe', $entity->name );
