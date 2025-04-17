@@ -15,7 +15,7 @@ require_once AXPECTO_SRC_PATH . 'ClassLoader/FileSystemClassLoader.php';
 $classLoader = new FileSystemClassLoader();
 $classLoader->registerPath( namespace: AXPECTO_NAMESPACE, path: AXPECTO_SRC_PATH );
 
-$container = new Container();
-$container->addClassInstance( FileSystemClassLoader::class, $classLoader );
-$container->addValue( 'runnerPath', __DIR__ . '/run.php' );
-$container->addValue( 'isAxpectoRunner', false );
+// Create the Axpecto container.
+global $axpectoContainer;
+$axpectoContainer = new Container();
+$axpectoContainer->addClassInstance( FileSystemClassLoader::class, $classLoader );

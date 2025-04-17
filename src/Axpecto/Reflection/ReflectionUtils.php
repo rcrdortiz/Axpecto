@@ -344,8 +344,9 @@ class ReflectionUtils {
 	 * @TODO Fix multivalued argument type.
 	 */
 	private function reflectionToArgument( ReflectionProperty|ReflectionParameter $reflection ): Argument {
-		$name    = $reflection->getName();
-		$type    = $reflection->getType()?->getName() ?? 'mixed';
+		$name     = $reflection->getName();
+		$type     = $reflection->getType()?->getName() ?? 'mixed';
+		$nullable = $reflection->getType()?->allowsNull() ?? false;
 		$default = null;
 
 		if ( $reflection instanceof ReflectionParameter ) {
@@ -361,6 +362,7 @@ class ReflectionUtils {
 		return new Argument(
 			name:    $name,
 			type:    $type,
+			nullable: $nullable,
 			default: $default
 		);
 	}

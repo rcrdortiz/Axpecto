@@ -8,9 +8,9 @@ use Axpecto\ClassBuilder\BuildHandler;
 use Axpecto\Reflection\ReflectionUtils;
 use Axpecto\Repository\Mapper\ArrayToEntityMapper;
 use Axpecto\Repository\Repository;
-use Axpecto\Storage\Criteria\Entity as EntityAttribute;
-use Axpecto\Storage\Criteria\Mapping;
 use Axpecto\Storage\Criteria\Operator;
+use Axpecto\Storage\Entity\Entity as EntityAttribute;
+use Axpecto\Storage\Entity\Mapping;
 use Exception;
 use ReflectionMethod;
 

@@ -8,8 +8,8 @@ use Axpecto\Storage\Connection\Connection;
 use Axpecto\Storage\Criteria\Condition;
 use Axpecto\Storage\Criteria\Criteria;
 use Axpecto\Storage\Criteria\CriteriaPersistenceStrategy;
-use Axpecto\Storage\Criteria\Entity as EntityAttribute;
 use Axpecto\Storage\Criteria\Operator;
+use Axpecto\Storage\Entity\Entity as EntityAttribute;
 use Exception;
 
 class MysqlPersistenceStrategy implements CriteriaPersistenceStrategy {

@@ -4,7 +4,7 @@ use Axpecto\Collection\Klist;
 use Axpecto\Reflection\Dto\Argument;
 use Axpecto\Reflection\ReflectionUtils;
 use Axpecto\Repository\Mapper\ArrayToEntityMapper;
-use Axpecto\Storage\Criteria\Mapping;
+use Axpecto\Storage\Entity\Mapping;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -72,7 +72,7 @@ class ArrayToEntityMapperTest extends TestCase {
 		];
 
 		// Map the data to a DummyEntity instance.
-		$entity = $mapper->map( DummyEntity::class, $data );
+		$entity = $mapper->mapEntityFromArray( DummyEntity::class, $data );
 
 		// Assert that the returned entity is an instance of DummyEntity with the expected values.
 		$this->assertInstanceOf( DummyEntity::class, $entity );

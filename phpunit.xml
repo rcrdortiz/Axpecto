@@ -1,8 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit bootstrap="tests/bootstrap.php"
-         displayDetailsOnTestsThatTriggerWarnings="true">
+         displayDetailsOnTestsThatTriggerWarnings="true"
+         colors="true"
+         verbose="true"
+         stopOnFailure="false"
+         stopOnError="false"
+         failOnWarning="false"
+         failOnRisky="false">
+    <coverage processUncoveredFiles="true">
+        <include>
+            <directory>src</directory>
+        </include>
+    </coverage>
     <testsuites>
-        <testsuite name="Enxp">
+        <testsuite name="Axpecto Test Suite">
             <directory>tests</directory>
         </testsuite>
     </testsuites>

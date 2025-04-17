@@ -1,6 +1,6 @@
 <?php
 
-namespace Axpecto\Storage\Criteria;
+namespace Axpecto\Storage\Entity;
 
 use Attribute;
 
@@ -9,10 +9,10 @@ class Mapping {
 	/**
 	 * Constructor.
 	 *
-	 * @param string $fromField
+	 * @param string $toField
 	 */
 	public function __construct(
-		public readonly string $fromField,
+		public readonly string $toField,
 	) {
 	}
 }

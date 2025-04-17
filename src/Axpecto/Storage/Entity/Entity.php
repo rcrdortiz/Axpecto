@@ -1,8 +1,9 @@
 <?php
 
-namespace Axpecto\Storage\Criteria;
+namespace Axpecto\Storage\Entity;
 
 use Attribute;
+use Axpecto\Storage\Criteria\CriteriaPersistenceStrategy;
 
 #[Attribute( Attribute::TARGET_CLASS )]
 class Entity {

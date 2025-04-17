@@ -67,4 +67,14 @@ class MysqliStatement implements Statement {
 
 		return $types;
 	}
+
+	public function rowCount(): int {
+		// fallback: try both methods depending on context
+		$this->stmt->store_result(); // safe even if not SELECT
+		return $this->stmt->num_rows > 0 ? $this->stmt->num_rows : $this->stmt->affected_rows;
+	}
+
+	public function getLastError(): string {
+		return $this->stmt->error;
+	}
 }

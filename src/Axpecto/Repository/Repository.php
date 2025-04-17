@@ -9,7 +9,7 @@ use Axpecto\Annotation\Annotation;
 use Axpecto\ClassBuilder\BuildHandler;
 use Axpecto\Container\Annotation\Inject;
 use Axpecto\Repository\Handler\RepositoryBuildHandler;
-use Axpecto\Storage\Criteria\Entity as EntityAttribute;
+use Axpecto\Storage\Entity\Entity as EntityAttribute;
 
 /**
  * Repository attribute.

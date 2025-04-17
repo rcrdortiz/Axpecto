@@ -18,4 +18,18 @@ interface Statement {
 	 * @return array
 	 */
 	public function fetchAll(): array;
+
+	/**
+	 * Returns the number of rows affected by the last statement.
+	 *
+	 * @return int
+	 */
+	public function rowCount(): int;
+
+	/**
+	 * Returns the last error message from the statement.
+	 *
+	 * @return string
+	 */
+	public function getLastError(): string;
 }
