@@ -31,8 +31,8 @@ class ArrayToEntityMapperTest extends TestCase {
 	public function testMap(): void {
 		// Prepare a Klist of constructor arguments.
 		$constructorArguments = new Klist( [
-			                                   new Argument( 'id', 'int', null ),
-			                                   new Argument( 'name', 'string', null ),
+			                                   new Argument( 'id', 'int', false, null ),
+			                                   new Argument( 'name', 'string', false, null ),
 		                                   ] );
 
 		// Prepare Klist for the Mapping annotation:
