@@ -12,7 +12,7 @@
     },
     "autoload": {
         "files": [
-            "src/load.php"
+            "src/functions.php"
         ]
     },
     "license": "GNU",
