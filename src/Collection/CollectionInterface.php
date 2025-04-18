@@ -17,6 +17,7 @@ use JsonSerializable;
  * @template TKey
  * @template TValue
  * @extends ArrayAccess<TKey, TValue>
+ * @extends Iterator<TKey, TValue>
  */
 interface CollectionInterface extends ArrayAccess, Countable, Iterator, JsonSerializable {
 
@@ -115,6 +116,8 @@ interface CollectionInterface extends ArrayAccess, Countable, Iterator, JsonSeri
 	/**
 	 * Join elements of the collection into a string with a separator.
 	 *
+	 * @param string $separator
+	 *
 	 * @return string
 	 */
 	public function join(string $separator): string;
@@ -122,7 +125,10 @@ interface CollectionInterface extends ArrayAccess, Countable, Iterator, JsonSeri
 	/**
 	 * Apply a predicate if the collection is not empty.
 	 *
+	 * @psalm-suppress PossiblyUnusedMethod
+	 *
 	 * @param Closure(CollectionInterface<TKey, TValue>):void $predicate
+	 *
 	 * @return static
 	 */
 	public function maybe(Closure $predicate): static;
@@ -130,12 +136,16 @@ interface CollectionInterface extends ArrayAccess, Countable, Iterator, JsonSeri
 	/**
 	 * Convert the collection to a mutable variant.
 	 *
+	 * @psalm-suppress PossiblyUnusedMethod
+	 *
 	 * @return static
 	 */
 	public function toMutable(): static;
 
 	/**
 	 * Convert the collection to an immutable variant.
+	 *
+	 * @psalm-suppress PossiblyUnusedMethod
 	 *
 	 * @return static
 	 */

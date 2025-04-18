@@ -4,6 +4,7 @@ namespace Axpecto\Collection;
 
 use Closure;
 use Exception;
+use Override;
 
 /**
  * A key-value based collection that supports functional operations.
@@ -30,34 +31,42 @@ class Kmap implements CollectionInterface {
 		$this->array = $array;
 	}
 
+	#[Override]
 	public function current(): mixed {
 		return $this->valid() ? $this->array[ $this->keys[ $this->index ] ] : null;
 	}
 
+	#[Override]
 	public function key(): mixed {
 		return $this->keys[ $this->index ] ?? null;
 	}
 
+	#[Override]
 	public function next(): void {
 		$this->index ++;
 	}
 
+	#[Override]
 	public function valid(): bool {
 		return isset( $this->keys[ $this->index ] ) && array_key_exists( $this->keys[ $this->index ], $this->array );
 	}
 
+	#[Override]
 	public function rewind(): void {
 		$this->index = 0;
 	}
 
+	#[Override]
 	public function offsetExists( mixed $offset ): bool {
 		return isset( $this->array[ $offset ] );
 	}
 
+	#[Override]
 	public function offsetGet( mixed $offset ): mixed {
 		return $this->array[ $offset ];
 	}
 
+	#[Override]
 	public function offsetSet( mixed $offset, mixed $value ): void {
 		if ( ! $this->mutable ) {
 			throw new Exception( "Immutable collection cannot be modified" );
@@ -68,6 +77,7 @@ class Kmap implements CollectionInterface {
 		$this->keys             = array_keys( $this->array );
 	}
 
+	#[Override]
 	public function offsetUnset( mixed $offset ): void {
 		if ( ! $this->mutable ) {
 			throw new Exception( "Immutable collection cannot be modified" );
@@ -77,14 +87,17 @@ class Kmap implements CollectionInterface {
 		$this->keys = array_keys( $this->array );
 	}
 
+	#[Override]
 	public function count(): int {
 		return count( $this->array );
 	}
 
+	#[Override]
 	public function isEmpty(): bool {
 		return count( $this->array ) === 0;
 	}
 
+	#[Override]
 	public function isNotEmpty(): bool {
 		return ! $this->isEmpty();
 	}
@@ -92,6 +105,7 @@ class Kmap implements CollectionInterface {
 	/**
 	 * @return static
 	 */
+	#[Override]
 	public function filterNotNull(): static {
 		return $this->filter( fn( $k, $v ) => $v !== null );
 	}
@@ -99,6 +113,7 @@ class Kmap implements CollectionInterface {
 	/**
 	 * @param Closure(TValue):bool $predicate
 	 */
+	#[Override]
 	public function any( Closure $predicate ): bool {
 		foreach ( $this->array as $element ) {
 			if ( $predicate( $element ) ) {
@@ -112,6 +127,7 @@ class Kmap implements CollectionInterface {
 	/**
 	 * @param Closure(TValue):bool $predicate
 	 */
+	#[Override]
 	public function all( Closure $predicate ): bool {
 		foreach ( $this->array as $element ) {
 			if ( ! $predicate( $element ) ) {
@@ -122,6 +138,7 @@ class Kmap implements CollectionInterface {
 		return true;
 	}
 
+	#[Override]
 	public function jsonSerialize(): mixed {
 		return $this->array;
 	}
@@ -129,6 +146,7 @@ class Kmap implements CollectionInterface {
 	/**
 	 * @return array<TKey, TValue>
 	 */
+	#[Override]
 	public function toArray(): array {
 		return $this->array;
 	}
@@ -138,6 +156,7 @@ class Kmap implements CollectionInterface {
 	 *
 	 * @return static
 	 */
+	#[Override]
 	public function filter( Closure $predicate ): static {
 		$filtered = [];
 		foreach ( $this->array as $key => $value ) {
@@ -161,6 +180,7 @@ class Kmap implements CollectionInterface {
 	 *
 	 * @return static
 	 */
+	#[Override]
 	public function mergeArray( array $array ): static {
 		$data = array_merge( $array, $this->array );
 
@@ -179,6 +199,7 @@ class Kmap implements CollectionInterface {
 	 *
 	 * @return static
 	 */
+	#[Override]
 	public function merge( CollectionInterface $collection ): static {
 		return $this->mergeArray( $collection->toArray() );
 	}
@@ -189,6 +210,7 @@ class Kmap implements CollectionInterface {
 	 * @param Closure(TKey, TValue): array<TMapKey, TMapValue> $transform
 	 * @return Kmap<TMapKey, TMapValue>
 	 */
+	#[Override]
 	public function map( Closure $transform ): Kmap {
 		$data = [];
 
@@ -210,6 +232,7 @@ class Kmap implements CollectionInterface {
 	/**
 	 * @throws Exception
 	 */
+	#[Override]
 	public function join( string $separator ): string {
 		if ( $this->any( fn( $element ) => ! is_string( $element ) ) ) {
 			throw new Exception( "Cannot join non-string elements" );
@@ -223,6 +246,7 @@ class Kmap implements CollectionInterface {
 	 *
 	 * @return static
 	 */
+	#[Override]
 	public function maybe( Closure $predicate ): static {
 		if ( $this->count() > 0 ) {
 			$predicate( $this );
@@ -234,6 +258,7 @@ class Kmap implements CollectionInterface {
 	/**
 	 * @return static
 	 */
+	#[Override]
 	public function toMutable(): static {
 		return $this->mutable ? $this : new static( $this->array, true );
 	}
@@ -241,6 +266,7 @@ class Kmap implements CollectionInterface {
 	/**
 	 * @return static
 	 */
+	#[Override]
 	public function toImmutable(): static {
 		return ! $this->mutable ? $this : new static( $this->array, false );
 	}
@@ -248,6 +274,7 @@ class Kmap implements CollectionInterface {
 	/**
 	 * @return static
 	 */
+	#[Override]
 	public function flatten(): static {
 		$data = [];
 
@@ -276,6 +303,7 @@ class Kmap implements CollectionInterface {
 	 *
 	 * @return static
 	 */
+	#[Override]
 	public function foreach( Closure $transform ): static {
 		foreach ( $this->array as $key => $element ) {
 			$transform( $key, $element );
@@ -287,6 +315,7 @@ class Kmap implements CollectionInterface {
 	/**
 	 * @return TValue|null
 	 */
+	#[Override]
 	public function firstOrNull(): mixed {
 		return $this->array[ $this->keys[0] ?? 0 ] ?? null;
 	}
