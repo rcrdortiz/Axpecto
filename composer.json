@@ -11,6 +11,9 @@
         "vimeo/psalm": "^6.10"
     },
     "autoload": {
+        "psr-4": {
+            "Axpecto\\": "src/"
+        },
         "files": [
             "src/functions.php"
         ]

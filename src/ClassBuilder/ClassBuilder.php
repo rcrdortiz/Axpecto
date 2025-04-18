@@ -2,11 +2,11 @@
 
 namespace Axpecto\ClassBuilder;
 
-use Axpecto\Annotation\Annotation;
-use Axpecto\Annotation\AnnotationReader;
 use Axpecto\Container\Exception\ClassAlreadyBuiltException;
 use Axpecto\Reflection\ReflectionUtils;
 use ReflectionException;
+use Axpecto\Annotation\Annotation;
+use Axpecto\Annotation\AnnotationReader;
 
 /**
  * Class ClassBuilder

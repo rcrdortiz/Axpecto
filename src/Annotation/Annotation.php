@@ -17,7 +17,7 @@ use Axpecto\MethodExecution\MethodExecutionHandler;
  * @package Axpecto\Aop
  */
 #[Attribute]
-abstract class Annotation {
+class Annotation {
 
 	/**
 	 * The handler for processing the method execution annotation.
