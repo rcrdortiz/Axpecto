@@ -184,17 +184,17 @@ class Kmap implements CollectionInterface {
 	}
 
 	/**
-	 * @template TMap
-	 * @param Closure(TKey, TValue):array{0:TKey, 1:TMap} $transform
-	 *
-	 * @return Kmap<TKey, TMap>
+	 * @template TMapKey of array-key
+	 * @template TMapValue
+	 * @param Closure(TKey, TValue): array<TMapKey, TMapValue> $transform
+	 * @return Kmap<TMapKey, TMapValue>
 	 */
 	public function map( Closure $transform ): Kmap {
 		$data = [];
 
 		foreach ( $this->array as $key => $value ) {
-			[ $newKey, $newValue ] = $transform( $key, $value );
-			$data[ $newKey ] = $newValue;
+			$entry                 = $transform( $key, $value );
+			$data[ key( $entry ) ] = current( $entry );
 		}
 
 		if ( $this->mutable ) {
