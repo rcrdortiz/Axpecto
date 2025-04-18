@@ -25,7 +25,9 @@ class BuildContext {
 	/**
 	 * Constructor for the BuildOutput class.
 	 *
-	 * @param Kmap $methods    List of methods in the output.
+	 * @psalm-suppress PossiblyUnusedProperty
+	 *
+	 * @param Kmap $methods List of methods in the output.
 	 * @param Kmap $properties List of class properties in the output.
 	 */
 	public function __construct(
@@ -40,8 +42,8 @@ class BuildContext {
 	 * Add a method with its signature and implementation to the output.
 	 * Modifies the internal state directly.
 	 *
-	 * @param string $name           The method name.
-	 * @param string $signature      The method signature.
+	 * @param string $name The method name.
+	 * @param string $signature The method signature.
 	 * @param string $implementation The method implementation.
 	 *
 	 * @return void
@@ -55,7 +57,7 @@ class BuildContext {
 	 * Add a property to the output.
 	 * Modifies the internal state directly.
 	 *
-	 * @param string $name           The property name.
+	 * @param string $name The property name.
 	 * @param string $implementation The property implementation.
 	 *
 	 * @return void
@@ -76,7 +78,7 @@ class BuildContext {
 	 */
 	public function injectProperty( string $name, string $class ): string {
 		$this->addProperty(
-			name:           $class,
+			name: $class,
 			implementation: "#[" . Inject::class . "] private $class \$$name;",
 		);
 
@@ -89,10 +91,10 @@ class BuildContext {
 	 *
 	 * @psalm-suppress PossiblyUnusedMethod
 	 *
-	 * @param Kmap $methods    List of methods to append.
+	 * @param Kmap $methods List of methods to append.
 	 * @param Kmap $properties List of properties to append.
 	 *
-//	 * @return void
+	 * //     * @return void
 	 */
 	public function add( Kmap $methods, Kmap $properties ): void {
 		$this->methods->merge( $methods );
