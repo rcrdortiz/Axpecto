@@ -13,143 +13,138 @@ use JsonSerializable;
  *
  * Represents a collection that supports various functional operations, including filtering,
  * mapping, merging, and transformation between mutable and immutable states.
+ *
+ * @template TKey
+ * @template TValue
+ * @extends ArrayAccess<TKey, TValue>
  */
 interface CollectionInterface extends ArrayAccess, Countable, Iterator, JsonSerializable {
 
 	/**
 	 * Convert the collection to an array.
 	 *
-	 * @return array The collection as a PHP array.
+	 * @return array<TKey, TValue>
 	 */
 	public function toArray(): array;
 
 	/**
 	 * Check if the collection is empty.
 	 *
-	 * @return bool True if empty, otherwise false.
+	 * @return bool
 	 */
 	public function isEmpty(): bool;
 
 	/**
 	 * Check if the collection is not empty.
 	 *
-	 * @return bool True if not empty, otherwise false.
+	 * @return bool
 	 */
 	public function isNotEmpty(): bool;
 
 	/**
 	 * Filter the collection based on a predicate.
 	 *
-	 * @param Closure $predicate A callback function to determine if an element should be included.
-	 *
-	 * @return static A new filtered collection.
+	 * @param Closure(TValue):bool $predicate
+	 * @return static
 	 */
-	public function filter( Closure $predicate ): static;
+	public function filter(Closure $predicate): static;
 
 	/**
 	 * Filter out null values from the collection.
 	 *
-	 * @return static A new collection without null values.
+	 * @return static
 	 */
 	public function filterNotNull(): static;
 
 	/**
 	 * Apply a transformation to each element in the collection.
 	 *
-	 * @param Closure $transform The transformation function.
-	 *
-	 * @return static A new collection with transformed elements.
+	 * @template TOut
+	 * @param Closure(TValue):TOut $transform
+	 * @return CollectionInterface<TKey, TOut>
 	 */
-	public function map( Closure $transform ): static;
+	public function map(Closure $transform): CollectionInterface;
 
 	/**
 	 * Execute a function for each element in the collection.
 	 *
-	 * @param Closure $transform The function to execute.
-	 *
-	 * @return static The current collection for chaining.
+	 * @param Closure(TValue):void $transform
+	 * @return static
 	 */
-	public function foreach( Closure $transform ): static;
+	public function foreach(Closure $transform): static;
 
 	/**
 	 * Determine if any element in the collection satisfies a predicate.
 	 *
-	 * @param Closure $predicate The predicate function.
-	 *
-	 * @return bool True if any element satisfies the predicate, otherwise false.
+	 * @param Closure(TValue):bool $predicate
+	 * @return bool
 	 */
-	public function any( Closure $predicate ): bool;
+	public function any(Closure $predicate): bool;
 
 	/**
 	 * Retrieve the first element in the collection or null if empty.
 	 *
-	 * @return mixed The first element or null.
+	 * @return TValue|null
 	 */
 	public function firstOrNull(): mixed;
 
 	/**
 	 * Determine if all elements in the collection satisfy a predicate.
 	 *
-	 * @param Closure $predicate The predicate function.
-	 *
-	 * @return bool True if all elements satisfy the predicate, otherwise false.
+	 * @param Closure(TValue):bool $predicate
+	 * @return bool
 	 */
-	public function all( Closure $predicate ): bool;
+	public function all(Closure $predicate): bool;
 
 	/**
 	 * Merge the collection with another array.
 	 *
-	 * @param array $array The array to merge.
-	 *
-	 * @return static A new collection with merged values.
+	 * @param array<TKey, TValue> $array
+	 * @return static
 	 */
-	public function mergeArray( array $array ): static;
+	public function mergeArray(array $array): static;
 
 	/**
 	 * Merge the collection with another collection.
 	 *
-	 * @param CollectionInterface $collection The collection to merge.
-	 *
-	 * @return static A new collection with merged values.
+	 * @param CollectionInterface<TKey, TValue> $collection
+	 * @return static
 	 */
-	public function merge( CollectionInterface $collection ): static;
+	public function merge(CollectionInterface $collection): static;
 
 	/**
 	 * Join elements of the collection into a string with a separator.
 	 *
-	 * @param string $separator The separator to use between elements.
-	 *
-	 * @return string The joined string.
+	 * @return string
 	 */
-	public function join( string $separator ): string;
+	public function join(string $separator): string;
 
 	/**
 	 * Apply a predicate if the collection is not empty.
 	 *
-	 * @param Closure $predicate The predicate function.
-	 *
-	 * @return static The current collection for chaining.
+	 * @param Closure(CollectionInterface<TKey, TValue>):void $predicate
+	 * @return static
 	 */
-	public function maybe( Closure $predicate ): static;
+	public function maybe(Closure $predicate): static;
 
 	/**
 	 * Convert the collection to a mutable variant.
 	 *
-	 * @return static A mutable version of the collection.
+	 * @return static
 	 */
 	public function toMutable(): static;
 
 	/**
 	 * Convert the collection to an immutable variant.
 	 *
-	 * @return static An immutable version of the collection.
+	 * @return static
 	 */
 	public function toImmutable(): static;
 
 	/**
 	 * Flatten nested elements within the collection.
 	 *
-	 * @return static A new collection with flattened elements.
+	 * @return static
 	 */
 	public function flatten(): static;
 }

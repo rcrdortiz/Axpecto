@@ -83,6 +83,8 @@ class BuildContext {
 	 * Append additional methods and properties to the current output.
 	 * Modifies the internal state directly by merging.
 	 *
+	 * @psalm-suppress PossiblyUnusedMethod
+	 *
 	 * @param Kmap $methods    List of methods to append.
 	 * @param Kmap $properties List of properties to append.
 	 *
@@ -104,6 +106,8 @@ class BuildContext {
 
 	/**
 	 * Add a trait to the output.
+	 *
+	 * @psalm-suppress PossiblyUnusedMethod
 	 *
 	 * @param string $trait
 	 *
