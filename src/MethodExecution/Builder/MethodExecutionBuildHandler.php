@@ -7,6 +7,7 @@ use Axpecto\ClassBuilder\BuildContext;
 use Axpecto\ClassBuilder\BuildHandler;
 use Axpecto\Container\Annotation\Inject;
 use Axpecto\Reflection\ReflectionUtils;
+use Override;
 use ReflectionException;
 
 /**
@@ -34,6 +35,7 @@ class MethodExecutionBuildHandler implements BuildHandler {
 	 *
 	 * @throws ReflectionException If reflection on the method or class fails.
 	 */
+	#[Override]
 	public function intercept( Annotation $annotation, BuildContext $context ): void {
 		$class  = $annotation->getAnnotatedClass();
 		$method = $annotation->getAnnotatedMethod();

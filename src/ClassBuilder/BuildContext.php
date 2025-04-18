@@ -4,6 +4,7 @@ namespace Axpecto\ClassBuilder;
 
 use Axpecto\Collection\Kmap;
 use Axpecto\Container\Annotation\Inject;
+use Exception;
 
 /**
  * Class BuildOutput
@@ -44,6 +45,7 @@ class BuildContext {
 	 * @param string $implementation The method implementation.
 	 *
 	 * @return void
+	 * @throws Exception
 	 */
 	public function addMethod( string $name, string $signature, string $implementation ): void {
 		$this->methods->add( $name, "$signature {\n\t\t$implementation\n\t}\n" );
@@ -57,6 +59,7 @@ class BuildContext {
 	 * @param string $implementation The property implementation.
 	 *
 	 * @return void
+	 * @throws Exception
 	 */
 	public function addProperty( string $name, string $implementation ): void {
 		$this->properties->add( $name, $implementation );
@@ -69,6 +72,7 @@ class BuildContext {
 	 * @param string $class
 	 *
 	 * @return string Reference to variable.
+	 * @throws Exception
 	 */
 	public function injectProperty( string $name, string $class ): string {
 		$this->addProperty(
@@ -88,7 +92,7 @@ class BuildContext {
 	 * @param Kmap $methods    List of methods to append.
 	 * @param Kmap $properties List of properties to append.
 	 *
-	 * @return void
+//	 * @return void
 	 */
 	public function add( Kmap $methods, Kmap $properties ): void {
 		$this->methods->merge( $methods );
@@ -112,6 +116,7 @@ class BuildContext {
 	 * @param string $trait
 	 *
 	 * @return void
+	 * @throws Exception
 	 */
 	public function addTrait( string $trait ): void {
 		$this->traits->add( $trait, $trait );

@@ -197,6 +197,8 @@ class Kmap implements CollectionInterface {
 	/**
 	 * @param CollectionInterface<TKey, TValue> $collection
 	 *
+	 * @psalm-suppress PossiblyUnusedReturnValue
+	 *
 	 * @return static
 	 */
 	#[Override]

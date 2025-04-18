@@ -18,6 +18,8 @@ class MethodExecutionProxy {
 	/**
 	 * MethodExecutionProxy constructor.
 	 *
+	 * @psalm-suppress PossiblyUnusedMethod
+	 *
 	 * @param ReflectionUtils  $reflect The reflection utility instance for handling class/method reflection.
 	 * @param AnnotationReader $reader  Reads annotations for the given class and method.
 	 */
@@ -32,6 +34,8 @@ class MethodExecutionProxy {
 	 *
 	 * This method intercepts the specified method, retrieves its annotations, and creates a chain of execution that
 	 * can modify the method's behavior. It allows annotations to control or augment method execution.
+	 *
+	 * @psalm-suppress PossiblyUnusedMethod
 	 *
 	 * @param string  $class      The fully qualified class name.
 	 * @param string  $method     The method name to intercept.

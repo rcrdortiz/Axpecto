@@ -42,6 +42,8 @@ class Container {
 	/**
 	 * Container constructor.
 	 *
+	 * @psalm-suppress PossiblyUnusedMethod
+	 *
 	 * @param array $values     Stores constant values (like configs).
 	 * @param array $bindings   Maps interfaces or abstract classes to concrete implementations.
 	 * @param array $instances  Stores class instances (usually singletons).
@@ -82,6 +84,8 @@ class Container {
 
 	/**
 	 * Adds a value (e.g., config or constant) to the container.
+	 *
+	 * @psalm-suppress PossiblyUnusedMethod
 	 *
 	 * @param string $name  The name of the value.
 	 * @param mixed  $value The value to add.

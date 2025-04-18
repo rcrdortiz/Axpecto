@@ -99,24 +99,6 @@ class ReflectionUtils {
 	}
 
 	/**
-	 * Fetches annotations for a method.
-	 *
-	 * @param class-string<T> $class
-	 * @param string          $method
-	 * @param string          $annotationClass
-	 *
-	 * @return Klist<Annotation>
-	 * @throws ReflectionException
-	 */
-	public function getMethodAnnotations( string $class, string $method, string $annotationClass = Annotation::class ): Klist {
-		return $this->getAnnotations(
-			attributes:      listFrom( $this->getReflectionClass( $class )->getMethod( $method )->getAttributes() ),
-			target:          Attribute::TARGET_METHOD,
-			annotationClass: $annotationClass
-		);
-	}
-
-	/**
 	 * Fetches annotations for a class.
 	 *
 	 * @param class-string<T> $class
@@ -252,6 +234,8 @@ class ReflectionUtils {
 
 	/**
 	 * Gets default argument values for a method.
+	 *
+	 * @psalm-suppress PossiblyUnusedMethod
 	 *
 	 * @param string $class
 	 * @param string $method
@@ -397,17 +381,6 @@ class ReflectionUtils {
 			target:          Attribute::TARGET_METHOD,
 			annotationClass: $annotationClass,
 		)->isNotEmpty();
-	}
-
-	/**
-	 * Checks if a method is overrideable when extending the base class.
-	 *
-	 * @param ReflectionMethod $method
-	 *
-	 * @return bool
-	 */
-	private function methodIsOverrideable( ReflectionMethod $method ): bool {
-		return ! ( $method->isConstructor() || $method->isPrivate() || $method->isFinal() );
 	}
 
 	/**

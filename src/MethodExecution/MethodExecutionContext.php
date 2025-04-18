@@ -9,6 +9,8 @@ use Closure;
 /**
  * Class MethodExecutionContext
  *
+ * @psalm-suppress PossiblyUnusedProperty
+ *
  * Manages the execution of a method in the context of annotations that can intercept and modify its behavior.
  * The method execution context holds details about the class, method, arguments, and queue of annotations.
  */
@@ -36,6 +38,8 @@ class MethodExecutionContext {
 	/**
 	 * Get the current annotation being processed.
 	 *
+	 * @psalm-suppress PossiblyUnusedMethod
+	 *
 	 * @return Annotation|null
 	 */
 	public function getAnnotation(): ?Annotation {
@@ -44,6 +48,8 @@ class MethodExecutionContext {
 
 	/**
 	 * Add or update an argument for the method execution.
+	 *
+	 * @psalm-suppress PossiblyUnusedMethod
 	 *
 	 * @param string $name  The argument name.
 	 * @param mixed  $value The argument value.
