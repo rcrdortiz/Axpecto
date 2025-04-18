@@ -14,7 +14,7 @@ use Exception;
 use Override;
 
 /**
- * @psalm-suppress PossiblyUnusedMethod Class used by generated Repository implementations.
+ * @psalm-suppress UnusedClass This class is used by the build system or clients.
  */
 class MysqlPersistenceStrategy implements CriteriaPersistenceStrategy {
 
@@ -26,6 +26,8 @@ class MysqlPersistenceStrategy implements CriteriaPersistenceStrategy {
 
 	/**
 	 * Retrieves entity metadata (Entity attribute) from the given entity class.
+	 *
+	 * @psalm-suppress PossiblyUnusedMethod Class used by generated Repository implementations.
 	 *
 	 * @param string $entityClass
 	 *
@@ -48,6 +50,8 @@ class MysqlPersistenceStrategy implements CriteriaPersistenceStrategy {
 	 *
 	 * If the entity contains the primary key field (as defined by the entity metadata),
 	 * an update is performed; otherwise, a new record is inserted.
+	 *
+	 * @psalm-suppress PossiblyUnusedMethod Class used by generated Repository implementations.
 	 *
 	 * @param object $entity
 	 *
@@ -92,6 +96,8 @@ class MysqlPersistenceStrategy implements CriteriaPersistenceStrategy {
 
 	/**
 	 * Retrieve all entities matching the given criteria.
+	 *
+	 * @psalm-suppress PossiblyUnusedMethod Class used by generated Repository implementations.
 	 *
 	 * @TODO Refactor this whole method. Implement Klist reduce.
 	 *
@@ -178,6 +184,8 @@ class MysqlPersistenceStrategy implements CriteriaPersistenceStrategy {
 	/**
 	 * Retrieve a single entity matching the given criteria.
 	 *
+	 * @psalm-suppress PossiblyUnusedMethod Class used by generated Repository implementations.
+	 *
 	 * @template T
 	 * @param Criteria        $criteria
 	 * @param class-string<T> $entityClass Fully qualified entity class name.
@@ -188,14 +196,14 @@ class MysqlPersistenceStrategy implements CriteriaPersistenceStrategy {
 	#[Override]
 	public function findOneByCriteria( Criteria $criteria, string $entityClass ): ?object {
 		$criteria->addLimit( 1 );
-		/** @var T|null $result */
-		$result = $this->findAllByCriteria( $criteria, $entityClass )->firstOrNull();
 
-		return $result;
+		return $this->findAllByCriteria( $criteria, $entityClass )->firstOrNull();
 	}
 
 	/**
 	 * Delete an entity by its primary key.
+	 *
+	 * @psalm-suppress PossiblyUnusedMethod Class used by generated Repository implementations.
 	 *
 	 * @param int    $id
 	 * @param string $entityClass Fully qualified entity class name.
@@ -216,6 +224,8 @@ class MysqlPersistenceStrategy implements CriteriaPersistenceStrategy {
 
 	/**
 	 * Maps an Operator enum to its corresponding SQL operator string.
+	 *
+	 * @psalm-suppress PossiblyUnusedMethod Class used by generated Repository implementations.
 	 *
 	 * @param Operator $operator
 	 *
