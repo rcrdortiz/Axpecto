@@ -117,7 +117,6 @@ class MysqlPersistenceStrategy implements CriteriaPersistenceStrategy {
 
 		// Build conditions from the list of Condition objects.
 		$first = true;
-		/** @var Condition $cond */
 		foreach ( $criteria->getConditions()->toArray() as $cond ) {
 			$clause = "";
 			// If not the first condition, prepend the logic operator.
