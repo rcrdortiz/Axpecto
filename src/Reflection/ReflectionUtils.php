@@ -195,15 +195,14 @@ class ReflectionUtils {
 	 * @param string $property
 	 * @param mixed  $value
 	 *
-	 * @return object The modified instance.
+	 * @return void
 	 * @throws ReflectionException
 	 */
-	public function setPropertyValue( object $instance, string $property, mixed $value ): object {
+	public function setPropertyValue( object $instance, string $property, mixed $value ): void {
 		$reflectionProperty = new ReflectionProperty( $instance, $property );
+		/** @psalm-suppress UnusedMethodCall */
 		$reflectionProperty->setAccessible( true );
 		$reflectionProperty->setValue( $instance, $value );
-
-		return $instance;
 	}
 
 	/**

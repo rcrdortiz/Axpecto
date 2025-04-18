@@ -4,6 +4,9 @@ namespace Axpecto\Storage\Entity;
 
 use Attribute;
 
+/**
+ * @psalm-suppress UnusedProperty
+ */
 #[Attribute( Attribute::TARGET_PARAMETER )]
 class Mapping {
 	/**
