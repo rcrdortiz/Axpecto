@@ -65,7 +65,7 @@ class RepositoryBuildHandlerTest extends TestCase {
 		$metadata->method( 'getFields' )->willReturn(
 			listOf(
 				new EntityField( 'id', 'string', false, DummyEntity::class, persistenceMapping: 'id' ),
-				new EntityField( 'name', 'string', false, DummyEntity::class, persistenceMapping: 'name' ),
+				new EntityField( 'name', 'string', false, DummyEntity::class, persistenceMapping: 'name_mapping' ),
 			)
 		);
 
@@ -75,6 +75,7 @@ class RepositoryBuildHandlerTest extends TestCase {
 
 		$this->assertTrue( $context->methods->offsetExists( 'findByIdAndName' ) );
 		$this->assertStringContainsString( 'addCondition', $context->methods['findByIdAndName'] );
+		$this->assertStringContainsString( 'name_mapping', $context->methods['findByIdAndName'] );
 	}
 }
 
