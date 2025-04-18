@@ -7,9 +7,8 @@ use Axpecto\Collection\Klist;
 use Closure;
 
 /**
- * Class MethodExecutionContext
- *
  * @psalm-suppress PossiblyUnusedProperty
+ * Class MethodExecutionContext
  *
  * Manages the execution of a method in the context of annotations that can intercept and modify its behavior.
  * The method execution context holds details about the class, method, arguments, and queue of annotations.

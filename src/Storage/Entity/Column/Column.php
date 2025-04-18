@@ -5,6 +5,9 @@ namespace Axpecto\Storage\Entity\Column;
 use Attribute;
 use Axpecto\Storage\Entity\EntityField;
 
+/**
+ * @psalm-suppress PossiblyUnusedProperty
+ */
 #[Attribute( Attribute::TARGET_PARAMETER )]
 class Column {
 	const CURRENT_TIMESTAMP = 'CURRENT_TIMESTAMP';
