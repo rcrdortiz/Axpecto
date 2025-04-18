@@ -2,6 +2,9 @@
 
 namespace Axpecto\Storage\Entity;
 
+/**
+ * @psalm-suppress UnusedProperty
+ */
 class EntityField {
 	const NO_DEFAULT_VALUE_SPECIFIED = 'NO_DEFAULT_VALUE_SPECIFIED';
 

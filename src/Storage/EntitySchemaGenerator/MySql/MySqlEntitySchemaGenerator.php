@@ -6,6 +6,9 @@ use Axpecto\Storage\Connection\Connection;
 use Axpecto\Storage\Entity\EntityMetadataService;
 use Exception;
 
+/**
+ * @psalm-suppress UnusedClass This class is used by the build system or clients.
+ */
 class MySqlEntitySchemaGenerator {
 	public function __construct(
 		private readonly Connection $connection,

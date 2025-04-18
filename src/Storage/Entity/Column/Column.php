@@ -6,7 +6,7 @@ use Attribute;
 use Axpecto\Storage\Entity\EntityField;
 
 /**
- * @psalm-suppress PossiblyUnusedProperty
+ * @psalm-suppress UnusedProperty
  */
 #[Attribute( Attribute::TARGET_PARAMETER )]
 class Column {

@@ -8,6 +8,9 @@ use Exception;
 use mysqli;
 use Override;
 
+/**
+ * @psalm-suppress UnusedClass Used via annotation build system / DI container
+ */
 class MysqliConnection implements Connection {
 	public function __construct( private readonly mysqli $mysqli ) {
 	}

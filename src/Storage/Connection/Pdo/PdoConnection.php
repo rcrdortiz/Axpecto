@@ -7,6 +7,9 @@ use Axpecto\Storage\Connection\Statement;
 use Override;
 use PDO;
 
+/**
+ * @psalm-suppress UnusedClass Used via annotation build system / DI container
+ */
 class PdoConnection implements Connection {
 	public function __construct( private readonly PDO $pdo ) {
 	}

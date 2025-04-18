@@ -5,7 +5,7 @@ namespace Axpecto\Storage\Entity\Column;
 use Attribute;
 
 /**
- * @psalm-suppress PossiblyUnusedClass This class is used by the build system or clients.
+ * @psalm-suppress UnusedClass This class is used by the build system or clients.
  */
 #[Attribute( Attribute::TARGET_PARAMETER )]
 class UniqueNotNull extends Column {

@@ -8,7 +8,6 @@ use Exception;
 use ReflectionException;
 
 /**
- * @psalm-suppress PossiblyUnusedMethod Class used by generated Repository implementations.
  * Class ArrayToEntityMapper
  *
  * Maps an associative array to an entity instance by reading the constructor
@@ -19,7 +18,9 @@ use ReflectionException;
  */
 final class ArrayToEntityMapper {
 
-	/***
+	/**
+	 * @psalm-suppress PossiblyUnusedMethod Class used by generated Repository implementations.
+	 *
 	 * @param EntityMetadataService $metadataService
 	 */
 	public function __construct(
@@ -29,6 +30,8 @@ final class ArrayToEntityMapper {
 
 	/**
 	 * Maps an array to an entity.
+	 *
+	 * @psalm-suppress PossiblyUnusedMethod Class used by generated Repository implementations.
 	 *
 	 * @param class-string $entityClass Fully qualified class name of the entity.
 	 * @param array        $data        The source data array.
@@ -47,6 +50,8 @@ final class ArrayToEntityMapper {
 
 	/**
 	 * Resolves an argument value from the data array, checking for a Mapping annotation.
+	 *
+	 * @psalm-suppress PossiblyUnusedMethod Class used by generated Repository implementations.
 	 *
 	 * @param EntityField $field
 	 * @param array       $data

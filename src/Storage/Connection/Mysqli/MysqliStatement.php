@@ -26,7 +26,7 @@ class MysqliStatement implements Statement {
 			// Prepare an array of references.
 			$bindParams   = [];
 			$bindParams[] = $types;
-			foreach ( $params as $key => $value ) {
+			foreach ( $params as $value ) {
 				$bindParams[] = &$value;
 			}
 			if ( ! call_user_func_array( [ $this->stmt, 'bind_param' ], $bindParams ) ) {

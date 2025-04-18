@@ -11,6 +11,7 @@ use Override;
 use ReflectionException;
 
 /**
+ * @psalm-suppress UnusedClass Used via annotation build system / DI container
  * Class MethodExecutionBuildHandler
  *
  * Handles method annotations for AOP (Aspect-Oriented Programming)-based method execution.
