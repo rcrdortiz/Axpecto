@@ -79,7 +79,7 @@ class ClassBuilder {
 	 */
 	private function generateProxyClass( string $class, BuildContext $buildOutput ): string {
 		// Generate a unique proxy class name by replacing backslashes in the class name.
-		$proxiedClassName = str_replace( "\\", '_', $class );
+		$proxiedClassName = str_replace( "\\", '_', $class ) . 'Proxy';
 
 		// Define whether the proxy class extends or implements the original class.
 		$inheritanceType = $this->reflect->isInterface( $class ) ? 'implements' : 'extends';

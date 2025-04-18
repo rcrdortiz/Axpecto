@@ -55,6 +55,9 @@ class EntityMetadataService {
 		return $entityAnnotation;
 	}
 
+	/**
+	 * @throws ReflectionException
+	 */
 	private function mapArgumentToEntityField( Argument $argument, string $entity ): EntityField {
 		/* @var Column $column */
 		$column = $this->reflectionUtils->getParamAnnotations(
@@ -70,7 +73,7 @@ class EntityMetadataService {
 			nullable:           $column?->isNullable ?? $argument->nullable,
 			entityClass:        $entity,
 			default:            $column?->defaultValue ?? $argument->default ?? EntityField::NO_DEFAULT_VALUE_SPECIFIED,
-			persistenceMapping: $column?->toField ?? $argument->name,
+			persistenceMapping: $column?->name ?? $argument->name,
 			isAutoIncrement:    $column?->autoIncrement ?? false,
 			isPrimary:          $column?->isPrimary ?? false,
 			isUnique:           $column?->isUnique ?? false,

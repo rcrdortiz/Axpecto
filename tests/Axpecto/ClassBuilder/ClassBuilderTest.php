@@ -97,7 +97,7 @@ class ClassBuilderTest extends TestCase {
 		$result = $this->classBuilder->build( $class );
 
 		// Assert that a proxy class is generated and returned
-		$this->assertEquals( 'Axpecto_ClassBuilder_Tests_ClassBuilderTest', $result );
+		$this->assertEquals( 'Axpecto_ClassBuilder_Tests_ClassBuilderTestProxy', $result );
 	}
 
 	public function testGenerateProxyClass(): void {
@@ -123,7 +123,7 @@ class ClassBuilderTest extends TestCase {
 		$proxiedClassName = $method->invoke( $this->classBuilder, $class, $buildOutput );
 
 		// Assert that the generated class name is correct
-		$this->assertEquals( 'Axpecto_ClassBuilder_Tests_SampleClass', $proxiedClassName );
+		$this->assertEquals( 'Axpecto_ClassBuilder_Tests_SampleClassProxy', $proxiedClassName );
 	}
 }
 
