@@ -32,6 +32,8 @@ class Repository extends Annotation {
 	/**
 	 * Constructor.
 	 *
+	 * @psalm-suppress PossiblyUnusedMethod
+	 *
 	 * @param class-string<EntityAttribute> $entityClass The fully qualified class name of the entity associated with this repository.
 	 */
 	public function __construct(

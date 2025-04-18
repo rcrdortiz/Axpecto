@@ -7,6 +7,8 @@ use Axpecto\Collection\Kmap;
 
 /**
  * A criteria builder that supports multiple condition operators and logic operators.
+ *
+ * @psalm-suppress PossiblyUnusedMethod Used by generated code and/or clients.
  */
 class Criteria {
 
@@ -51,6 +53,7 @@ class Criteria {
 	 * @param LogicOperator|null $logic    The logic operator to combine with previous conditions (defaults to LogicOperator::AND).
 	 *
 	 * @return static
+	 * @throws \Exception
 	 */
 	public function addCondition( string $field, mixed $value, ?Operator $operator = null, ?LogicOperator $logic = null ): static {
 		$condition = new Condition(

@@ -11,6 +11,8 @@ class Entity {
 	/**
 	 * Constructor.
 	 *
+	 * @psalm-suppress PossiblyUnusedMethod
+	 *
 	 * @param class-string<CriteriaPersistenceStrategy> $storage The persistence strategy class name.
 	 */
 	public function __construct(

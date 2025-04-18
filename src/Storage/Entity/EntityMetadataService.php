@@ -13,6 +13,11 @@ class EntityMetadataService {
 
 	private const CONSTRUCTOR_METHOD = '__construct';
 
+	/**
+	 * @psalm-suppress PossiblyUnusedMethod
+	 *
+	 * @param ReflectionUtils $reflectionUtils
+	 */
 	public function __construct(
 		private readonly ReflectionUtils $reflectionUtils,
 	) {

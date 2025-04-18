@@ -41,13 +41,6 @@ class EntityFieldMapper {
 		return implode( " ", $parts );
 	}
 
-	private function mapIdFieldToSqlCreate( EntityField $field ): string {
-		return sprintf(
-			'%s INT AUTO_INCREMENT PRIMARY KEY',
-			$field->persistenceMapping
-		);
-	}
-
 	public function mapDefaultValue( $value ): string {
 		// MySQL expressions that should NOT be quoted
 		$reservedExpressions = [

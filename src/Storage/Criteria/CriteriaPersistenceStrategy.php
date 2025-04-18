@@ -4,6 +4,9 @@ namespace Axpecto\Storage\Criteria;
 
 use Axpecto\Collection\Klist;
 
+/**
+ * @psalm-suppress PossiblyUnusedMethod Used by generated code and clients.
+ */
 interface CriteriaPersistenceStrategy {
 	/**
 	 * @param object $entity

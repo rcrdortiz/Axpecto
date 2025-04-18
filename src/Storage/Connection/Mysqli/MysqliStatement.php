@@ -5,6 +5,7 @@ namespace Axpecto\Storage\Connection\Mysqli;
 use Axpecto\Storage\Connection\Statement;
 use Exception;
 use mysqli_stmt;
+use Override;
 
 class MysqliStatement implements Statement {
 	public function __construct( private readonly mysqli_stmt $stmt ) {
@@ -18,6 +19,7 @@ class MysqliStatement implements Statement {
 	 * @return bool
 	 * @throws Exception
 	 */
+	#[Override]
 	public function execute( array $params = [] ): bool {
 		if ( ! empty( $params ) ) {
 			$types = $this->getParamTypes( $params );
@@ -35,6 +37,7 @@ class MysqliStatement implements Statement {
 		return $this->stmt->execute();
 	}
 
+	#[Override]
 	public function fetchAll(): array {
 		$result = $this->stmt->get_result();
 		if ( $result === false ) {
@@ -68,12 +71,14 @@ class MysqliStatement implements Statement {
 		return $types;
 	}
 
+	#[Override]
 	public function rowCount(): int {
 		// fallback: try both methods depending on context
 		$this->stmt->store_result(); // safe even if not SELECT
 		return $this->stmt->num_rows > 0 ? $this->stmt->num_rows : $this->stmt->affected_rows;
 	}
 
+	#[Override]
 	public function getLastError(): string {
 		return $this->stmt->error;
 	}

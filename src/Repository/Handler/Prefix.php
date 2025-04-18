@@ -17,11 +17,4 @@ enum Prefix: string {
 	public static function getList() {
 		return listFrom( self::cases() );
 	}
-
-	public function isAllPrefix(): bool {
-		return match ( $this ) {
-			self::FIND_BY, self::GET_BY, self::READ_BY, self::QUERY_BY, self::SEARCH_BY => false,
-			self::GET_ALL, self::FIND_ALL, self::READ_ALL, self::SEARCH_ALL, self::QUERY_ALL => true,
-		};
-	}
 }

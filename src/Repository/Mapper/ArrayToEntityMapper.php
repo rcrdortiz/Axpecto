@@ -14,10 +14,15 @@ use ReflectionException;
  * arguments and any Mapping annotations defined on them. This ensures that the
  * array data is properly mapped to the corresponding database fields.
  *
+ * @psalm-suppress PossiblyUnusedMethod Class used by generated Repository implementations.
+ *
  * @package Axpecto\Repository\Mapper
  */
 final class ArrayToEntityMapper {
 
+	/***
+	 * @param EntityMetadataService $metadataService
+	 */
 	public function __construct(
 		private readonly EntityMetadataService $metadataService,
 	) {

@@ -12,16 +12,24 @@ use Axpecto\Storage\Criteria\Operator;
 use Axpecto\Storage\Entity\Entity as EntityAttribute;
 use Axpecto\Storage\Entity\Mapping;
 use Exception;
+use Override;
 use ReflectionMethod;
 
 class RepositoryBuildHandler implements BuildHandler {
 
+	/**
+	 * @psalm-suppress PossiblyUnusedMethod
+	 *
+	 * @param ReflectionUtils            $reflectUtils
+	 * @param RepositoryMethodNameParser $nameParser
+	 */
 	public function __construct(
 		private readonly ReflectionUtils $reflectUtils,
 		private readonly RepositoryMethodNameParser $nameParser,
 	) {
 	}
 
+	#[Override]
 	public function intercept( Annotation $annotation, BuildContext $context ): void {
 		if ( ! $annotation instanceof Repository || $annotation->getAnnotatedMethod() !== null ) {
 			return;

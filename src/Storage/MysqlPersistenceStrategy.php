@@ -11,6 +11,7 @@ use Axpecto\Storage\Criteria\CriteriaPersistenceStrategy;
 use Axpecto\Storage\Criteria\Operator;
 use Axpecto\Storage\Entity\Entity as EntityAttribute;
 use Exception;
+use Override;
 
 class MysqlPersistenceStrategy implements CriteriaPersistenceStrategy {
 
@@ -50,6 +51,7 @@ class MysqlPersistenceStrategy implements CriteriaPersistenceStrategy {
 	 * @return bool True on success, false on failure.
 	 * @throws Exception
 	 */
+	#[Override]
 	public function save( object $entity ): bool {
 		$entityClass = get_class( $entity );
 		$annotation  = $this->getEntityMetadata( $entityClass );
@@ -96,6 +98,7 @@ class MysqlPersistenceStrategy implements CriteriaPersistenceStrategy {
 	 * @return Klist
 	 * @throws Exception
 	 */
+	#[Override]
 	public function findAllByCriteria( Criteria $criteria, string $entityClass ): Klist {
 		$annotation = $this->getEntityMetadata( $entityClass );
 		$table      = $annotation->table;
@@ -179,6 +182,7 @@ class MysqlPersistenceStrategy implements CriteriaPersistenceStrategy {
 	 * @return T|null Returns an instance of T or null if not found.
 	 * @throws Exception
 	 */
+	#[Override]
 	public function findOneByCriteria( Criteria $criteria, string $entityClass ): ?object {
 		$criteria->addLimit( 1 );
 		/** @var T|null $result */
@@ -196,6 +200,7 @@ class MysqlPersistenceStrategy implements CriteriaPersistenceStrategy {
 	 * @return bool
 	 * @throws Exception
 	 */
+	#[Override]
 	public function delete( int $id, string $entityClass ): bool {
 		$annotation = $this->getEntityMetadata( $entityClass );
 		$table      = $annotation->table;

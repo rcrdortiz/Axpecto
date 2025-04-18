@@ -6,6 +6,7 @@ use Axpecto\Storage\Connection\Connection;
 use Axpecto\Storage\Connection\Statement;
 use Exception;
 use mysqli;
+use Override;
 
 class MysqliConnection implements Connection {
 	public function __construct( private readonly mysqli $mysqli ) {
@@ -14,6 +15,7 @@ class MysqliConnection implements Connection {
 	/**
 	 * @throws Exception
 	 */
+	#[Override]
 	public function prepare( string $sql ): Statement {
 		$stmt = $this->mysqli->prepare( $sql );
 		if ( ! $stmt ) {
@@ -23,6 +25,7 @@ class MysqliConnection implements Connection {
 		return new MysqliStatement( $stmt );
 	}
 
+	#[Override]
 	public function lastInsertId(): string {
 		return (string) $this->mysqli->insert_id;
 	}
