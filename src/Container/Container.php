@@ -13,6 +13,7 @@ use Axpecto\Reflection\Dto\Argument;
 use Axpecto\Reflection\ReflectionUtils;
 use Exception;
 use ReflectionException;
+use RuntimeException;
 
 /**
  * Class Container
@@ -160,7 +161,13 @@ class Container {
 			$annotation = $this->reflect->getPropertyAnnotated( $instance::class, $property->name, with: Inject::class );
 
 			if ( ! empty( $annotation->args ) ) {
-				$value = new ( $property->type )( ...$annotation->args );
+				$type = $property->type;
+
+				if ( ! is_string( $type ) || ! class_exists( $type ) ) {
+					throw new RuntimeException("Cannot instantiate property {$property->name}: missing or invalid type.");
+				}
+
+				$value = new $type( ...$annotation->args );
 			} elseif ( ! empty( $annotation->class ) ) {
 				$value = $this->get( $annotation->class );
 			} else {
