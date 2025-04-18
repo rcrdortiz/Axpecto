@@ -7,6 +7,7 @@ use Axpecto\Container\Annotation\Inject;
 use Exception;
 
 /**
+ * @psalm-suppress PossiblyUnusedProperty
  * Class BuildOutput
  *
  * This class encapsulates the output of a build process for handling methods and properties
@@ -24,9 +25,7 @@ class BuildContext {
 
 	/**
 	 * Constructor for the BuildOutput class.
-	 *
-	 * @psalm-suppress PossiblyUnusedProperty
-	 *
+	 **
 	 * @param Kmap $methods List of methods in the output.
 	 * @param Kmap $properties List of class properties in the output.
 	 */
