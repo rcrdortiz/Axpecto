@@ -6,9 +6,9 @@ use Axpecto\Collection\Klist;
 use Axpecto\Collection\Kmap;
 
 /**
- * A criteria builder that supports multiple condition operators and logic operators.
- *
  * @psalm-suppress PossiblyUnusedMethod Used by generated code and/or clients.
+ *
+ * A criteria builder that supports multiple condition operators and logic operators.*
  */
 class Criteria {
 

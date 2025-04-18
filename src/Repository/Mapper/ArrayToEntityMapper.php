@@ -8,13 +8,12 @@ use Exception;
 use ReflectionException;
 
 /**
+ * @psalm-suppress PossiblyUnusedMethod Class used by generated Repository implementations.
  * Class ArrayToEntityMapper
  *
  * Maps an associative array to an entity instance by reading the constructor
  * arguments and any Mapping annotations defined on them. This ensures that the
  * array data is properly mapped to the corresponding database fields.
- *
- * @psalm-suppress PossiblyUnusedMethod Class used by generated Repository implementations.
  *
  * @package Axpecto\Repository\Mapper
  */

@@ -13,6 +13,9 @@ use Axpecto\Storage\Entity\Entity as EntityAttribute;
 use Exception;
 use Override;
 
+/**
+ * @psalm-suppress PossiblyUnusedMethod Class used by generated Repository implementations.
+ */
 class MysqlPersistenceStrategy implements CriteriaPersistenceStrategy {
 
 	public function __construct(
