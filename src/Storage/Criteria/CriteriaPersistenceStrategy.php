@@ -4,11 +4,10 @@ namespace Axpecto\Storage\Criteria;
 
 use Axpecto\Collection\Klist;
 
-/**
- * @psalm-suppress PossiblyUnusedMethod Used by generated code and clients.
- */
 interface CriteriaPersistenceStrategy {
 	/**
+	 * @psalm-suppress PossiblyUnusedMethod Used by generated code and/or clients.
+	 *
 	 * @param object $entity
 	 *
 	 * @return bool
@@ -16,6 +15,8 @@ interface CriteriaPersistenceStrategy {
 	public function save( object $entity ): bool;
 
 	/**
+	 * @psalm-suppress PossiblyUnusedMethod Used by generated code and/or clients.
+	 *
 	 * @param Criteria $criteria
 	 * @param string   $entityClass
 	 *
@@ -24,14 +25,19 @@ interface CriteriaPersistenceStrategy {
 	public function findAllByCriteria( Criteria $criteria, string $entityClass ): Klist;
 
 	/**
+	 * @psalm-suppress PossiblyUnusedMethod Used by generated code and/or clients.
 	 * @template T
+	 *
 	 * @param Criteria $criteria
 	 * @param class-string<T> $entityClass
+	 *
 	 * @return T|null
 	 */
 	public function findOneByCriteria(Criteria $criteria, string $entityClass);
 
 	/**
+	 * @psalm-suppress PossiblyUnusedMethod Used by generated code and/or clients.
+	 *
 	 * @param int    $id
 	 * @param string $entityClass
 	 */

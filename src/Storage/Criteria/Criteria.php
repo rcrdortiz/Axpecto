@@ -6,8 +6,6 @@ use Axpecto\Collection\Klist;
 use Axpecto\Collection\Kmap;
 
 /**
- * @psalm-suppress PossiblyUnusedMethod Used by generated code and/or clients.
- *
  * A criteria builder that supports multiple condition operators and logic operators.*
  */
 class Criteria {
@@ -30,6 +28,8 @@ class Criteria {
 	/**
 	 * Constructor.
 	 *
+	 * @psalm-suppress PossiblyUnusedMethod Used by generated code and/or clients.
+	 *
 	 * @param Klist<Condition>|null        $conditions
 	 * @param int|null                     $limit
 	 * @param Kmap<string, OrderType>|null $ordering
@@ -46,6 +46,8 @@ class Criteria {
 
 	/**
 	 * Add a new condition to the criteria.
+	 *
+	 * @psalm-suppress PossiblyUnusedMethod Used by generated code and/or clients.
 	 *
 	 * @param string             $field    The field name.
 	 * @param mixed              $value    The value for the condition.
@@ -70,6 +72,8 @@ class Criteria {
 	/**
 	 * Get all conditions.
 	 *
+	 * @psalm-suppress PossiblyUnusedMethod Used by generated code and/or clients.
+	 *
 	 * @return Klist<Condition>
 	 */
 	public function getConditions(): Klist {
@@ -78,6 +82,8 @@ class Criteria {
 
 	/**
 	 * Set the limit for the query.
+	 *
+	 * @psalm-suppress PossiblyUnusedMethod Used by generated code and/or clients.
 	 *
 	 * @param int $limit
 	 *
@@ -92,6 +98,8 @@ class Criteria {
 	/**
 	 * Get the limit.
 	 *
+	 * @psalm-suppress PossiblyUnusedMethod Used by generated code and/or clients.
+	 *
 	 * @return int|null
 	 */
 	public function getLimit(): ?int {
@@ -101,10 +109,13 @@ class Criteria {
 	/**
 	 * Add ordering to the query.
 	 *
+	 * @psalm-suppress PossiblyUnusedMethod Used by generated code and/or clients.
+	 *
 	 * @param string    $field
 	 * @param OrderType $order
 	 *
 	 * @return static
+	 * @throws \Exception
 	 */
 	public function addOrder( string $field, OrderType $order ): static {
 		$this->ordering->add( $field, $order );
@@ -114,6 +125,8 @@ class Criteria {
 
 	/**
 	 * Get the ordering instructions.
+	 *
+	 * @psalm-suppress PossiblyUnusedMethod Used by generated code and/or clients.
 	 *
 	 * @return Kmap<string, OrderType>
 	 */
