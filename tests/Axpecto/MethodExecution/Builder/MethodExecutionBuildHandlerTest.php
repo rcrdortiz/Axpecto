@@ -42,7 +42,7 @@ class MethodExecutionBuildHandlerTest extends TestCase {
 
 		// Expect the method and property to be added to the context
 		$this->buildContextMock->expects( $this->once() )->method( 'addMethod' )->with( $method, $signature, $implementation );
-		$this->buildContextMock->expects( $this->once() )->method( 'addProperty' )->with( MethodExecutionProxy::class, $this->anything() );
+		$this->buildContextMock->expects( $this->once() )->method( 'injectProperty' )->with( 'proxy', MethodExecutionProxy::class );
 
 		// Execute the intercept method
 		$this->methodExecutionBuildHandler->intercept( $this->annotationMock, $this->buildContextMock );
@@ -64,7 +64,7 @@ class MethodExecutionBuildHandlerTest extends TestCase {
 
 		// Expect the method and property to be added to the context
 		$this->buildContextMock->expects( $this->once() )->method( 'addMethod' )->with( $method, $signature, $implementation );
-		$this->buildContextMock->expects( $this->once() )->method( 'addProperty' )->with( MethodExecutionProxy::class, $this->anything() );
+		$this->buildContextMock->expects( $this->once() )->method( 'injectProperty' )->with( 'proxy', MethodExecutionProxy::class );
 
 		// Execute the intercept method
 		$this->methodExecutionBuildHandler->intercept( $this->annotationMock, $this->buildContextMock );
