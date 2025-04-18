@@ -8,12 +8,26 @@ use Axpecto\Storage\Criteria\Operator;
 /**
  * @psalm-suppress PossiblyUnusedProperty
  */
-class ParsedMethodPart {
+readonly class ParsedMethodPart {
 	public function __construct(
-		public readonly Prefix $prefix,
-		public readonly LogicOperator $logicOperator,
-		public readonly string $field,
-		public readonly Operator $operator,
+		public Prefix $prefix,
+		public LogicOperator $logicOperator,
+		public string $field,
+		public Operator $operator,
 	) {
+	}
+
+	public function copy(
+		?Prefix $prefix = null,
+		?LogicOperator $logicOperator = null,
+		?string $field = null,
+		?Operator $operator = null,
+	): self {
+		return new self(
+			prefix: $prefix ?? $this->prefix,
+			logicOperator: $logicOperator ?? $this->logicOperator,
+			field: $field ?? $this->field,
+			operator: $operator ?? $this->operator,
+		);
 	}
 }

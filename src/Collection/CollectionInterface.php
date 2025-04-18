@@ -46,9 +46,10 @@ interface CollectionInterface extends ArrayAccess, Countable, Iterator, JsonSeri
 	 * Filter the collection based on a predicate.
 	 *
 	 * @param Closure(TValue):bool $predicate
+	 *
 	 * @return static
 	 */
-	public function filter(Closure $predicate): static;
+	public function filter( Closure $predicate ): static;
 
 	/**
 	 * Filter out null values from the collection.
@@ -62,25 +63,28 @@ interface CollectionInterface extends ArrayAccess, Countable, Iterator, JsonSeri
 	 *
 	 * @template TOut
 	 * @param Closure(TValue):TOut $transform
+	 *
 	 * @return CollectionInterface<TKey, TOut>
 	 */
-	public function map(Closure $transform): CollectionInterface;
+	public function map( Closure $transform ): CollectionInterface;
 
 	/**
 	 * Execute a function for each element in the collection.
 	 *
 	 * @param Closure(TValue):void $transform
+	 *
 	 * @return static
 	 */
-	public function foreach(Closure $transform): static;
+	public function foreach( Closure $transform ): static;
 
 	/**
 	 * Determine if any element in the collection satisfies a predicate.
 	 *
 	 * @param Closure(TValue):bool $predicate
+	 *
 	 * @return bool
 	 */
-	public function any(Closure $predicate): bool;
+	public function any( Closure $predicate ): bool;
 
 	/**
 	 * Retrieve the first element in the collection or null if empty.
@@ -93,25 +97,28 @@ interface CollectionInterface extends ArrayAccess, Countable, Iterator, JsonSeri
 	 * Determine if all elements in the collection satisfy a predicate.
 	 *
 	 * @param Closure(TValue):bool $predicate
+	 *
 	 * @return bool
 	 */
-	public function all(Closure $predicate): bool;
+	public function all( Closure $predicate ): bool;
 
 	/**
 	 * Merge the collection with another array.
 	 *
 	 * @param array<TKey, TValue> $array
+	 *
 	 * @return static
 	 */
-	public function mergeArray(array $array): static;
+	public function mergeArray( array $array ): static;
 
 	/**
 	 * Merge the collection with another collection.
 	 *
 	 * @param CollectionInterface<TKey, TValue> $collection
+	 *
 	 * @return static
 	 */
-	public function merge(CollectionInterface $collection): static;
+	public function merge( CollectionInterface $collection ): static;
 
 	/**
 	 * Join elements of the collection into a string with a separator.
@@ -120,7 +127,7 @@ interface CollectionInterface extends ArrayAccess, Countable, Iterator, JsonSeri
 	 *
 	 * @return string
 	 */
-	public function join(string $separator): string;
+	public function join( string $separator ): string;
 
 	/**
 	 * Apply a predicate if the collection is not empty.
@@ -131,7 +138,7 @@ interface CollectionInterface extends ArrayAccess, Countable, Iterator, JsonSeri
 	 *
 	 * @return static
 	 */
-	public function maybe(Closure $predicate): static;
+	public function maybe( Closure $predicate ): static;
 
 	/**
 	 * Convert the collection to a mutable variant.
@@ -157,4 +164,23 @@ interface CollectionInterface extends ArrayAccess, Countable, Iterator, JsonSeri
 	 * @return static
 	 */
 	public function flatten(): static;
+
+	/**
+	 * Reduce the collection to a single value using a callback.
+	 *
+	 * @psalm-suppress PossiblyUnusedMethod
+	 *
+	 * @param Closure(mixed, TValue):mixed $transform
+	 * @param mixed|null $initial
+	 *
+	 * @return mixed
+	 */
+	public function reduce( Closure $transform, mixed $initial = null ): mixed;
+
+	/**
+	 * Returns the current item and advances the internal pointer.
+	 *
+	 * @return TValue|null
+	 */
+	public function nextAndGet(): mixed;
 }

@@ -24,7 +24,7 @@ class Kmap implements CollectionInterface {
 
 	/**
 	 * @param array<TKey, TValue> $array
-	 * @param bool                $mutable
+	 * @param bool $mutable
 	 */
 	public function __construct( array $array = [], private readonly bool $mutable = false ) {
 		$this->keys  = array_keys( $array );
@@ -44,6 +44,19 @@ class Kmap implements CollectionInterface {
 	#[Override]
 	public function next(): void {
 		$this->index ++;
+	}
+
+	/**
+	 * Returns the current item and advances the internal pointer.
+	 *
+	 * @return TValue|null
+	 */
+	#[Override]
+	public function nextAndGet(): mixed {
+		$current = $this->current();
+		$this->next();
+
+		return $current;
 	}
 
 	#[Override]
@@ -216,6 +229,7 @@ class Kmap implements CollectionInterface {
 	 * @template TMapKey of array-key
 	 * @template TMapValue
 	 * @param Closure(TKey, TValue): array<TMapKey, TMapValue> $transform
+	 *
 	 * @return Kmap<TMapKey, TMapValue>
 	 */
 	#[Override]
@@ -329,7 +343,7 @@ class Kmap implements CollectionInterface {
 	}
 
 	/**
-	 * @param TKey   $key
+	 * @param TKey $key
 	 * @param TValue $element
 	 *
 	 * @return void
@@ -347,5 +361,23 @@ class Kmap implements CollectionInterface {
 	public function resetKeys(): void {
 		$this->array = array_values( $this->array );
 		$this->keys  = array_keys( $this->array );
+	}
+
+	/**
+	 * Reduce the collection to a single value.
+	 *
+	 * @param Closure(mixed, TValue):mixed $transform
+	 * @param mixed|null $initial
+	 *
+	 * @return mixed
+	 */
+	#[Override]
+	public function reduce( Closure $transform, mixed $initial = null ): mixed {
+		$carry = $initial;
+		foreach ( $this->array as $element ) {
+			$carry = $transform( $carry, $element );
+		}
+
+		return $carry;
 	}
 }

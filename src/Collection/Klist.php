@@ -170,6 +170,16 @@ class Klist implements CollectionInterface {
 		$this->internalMap->next();
 	}
 
+	/**
+	 * Returns the current item and advances the internal pointer.
+	 *
+	 * @return TValue|null
+	 */
+	#[Override]
+	public function nextAndGet(): mixed {
+		return $this->internalMap->nextAndGet();
+	}
+
 	#[Override]
 	public function key(): mixed {
 		return $this->internalMap->key();
@@ -256,5 +266,18 @@ class Klist implements CollectionInterface {
 	 */
 	public function mapOf( Closure $transform ): KMap {
 		return $this->internalMap->map( fn( $key, $value ) => $transform( $value ) );
+	}
+
+	/**
+	 * Reduce the collection to a single value.
+	 *
+	 * @param Closure(mixed, TValue):mixed $transform
+	 * @param mixed|null $initial
+	 *
+	 * @return mixed
+	 */
+	#[Override]
+	public function reduce( Closure $transform, mixed $initial = null ): mixed {
+		return $this->internalMap->reduce( $transform, $initial );
 	}
 }
