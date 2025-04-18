@@ -66,6 +66,9 @@ class Kmap implements CollectionInterface {
 		return $this->array[ $offset ];
 	}
 
+	/**
+	 * @throws Exception
+	 */
 	#[Override]
 	public function offsetSet( mixed $offset, mixed $value ): void {
 		if ( ! $this->mutable ) {
@@ -77,6 +80,9 @@ class Kmap implements CollectionInterface {
 		$this->keys             = array_keys( $this->array );
 	}
 
+	/**
+	 * @throws Exception
+	 */
 	#[Override]
 	public function offsetUnset( mixed $offset ): void {
 		if ( ! $this->mutable ) {
