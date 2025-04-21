@@ -69,6 +69,8 @@ class BuildOutput {
 	/**
 	 * Inject a property into the output.
 	 *
+	 * @psalm-suppress PossiblyUnusedReturnValue
+	 *
 	 * @param string $name
 	 * @param string $class
 	 *

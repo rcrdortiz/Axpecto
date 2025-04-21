@@ -9,13 +9,18 @@ use Axpecto\Container\Container;
 use Axpecto\Reflection\ReflectionUtils;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
+use ReflectionClass;
+use ReflectionException;
 use stdClass;
+use Attribute;
+use ReflectionParameter;
+use ReflectionProperty;
 
 class AnnotationReaderTest extends TestCase
 {
-	private ReflectionUtils $reflect;
-	private Container       $container;
-	private AnnotationReader $reader;
+	private ReflectionUtils   $reflect;
+	private Container         $container;
+	private AnnotationReader  $reader;
 
 	protected function setUp(): void
 	{
@@ -30,24 +35,23 @@ class AnnotationReaderTest extends TestCase
 		$good  = $this->createMock(DummyAnnotation::class);
 		$bad   = $this->createMock(OtherAnnotation::class);
 
-		// reflect returns both
 		$this->reflect
+			->expects($this->once())
 			->method('getClassAttributes')
 			->with($class)
 			->willReturn(listOf($good, $bad));
 
-		// container should inject only the good one
+		// only $good should be injected
 		$this->container
 			->expects($this->once())
 			->method('applyPropertyInjection')
 			->with($good);
 
-		// stub setAnnotatedClass
 		$good
 			->expects($this->once())
 			->method('setAnnotatedClass')
 			->with($class)
-			->willReturn($good);
+			->willReturnSelf();
 
 		$out = $this->reader->getClassAnnotations($class, DummyAnnotation::class);
 
@@ -58,11 +62,12 @@ class AnnotationReaderTest extends TestCase
 
 	public function testGetMethodAnnotationsAddsClassAndMethod(): void
 	{
-		$class   = stdClass::class;
-		$method  = 'foo';
-		$ann     = $this->createMock(DummyAnnotation::class);
+		$class  = stdClass::class;
+		$method = 'foo';
+		$ann    = $this->createMock(DummyAnnotation::class);
 
 		$this->reflect
+			->expects($this->once())
 			->method('getMethodAttributes')
 			->with($class, $method)
 			->willReturn(listOf($ann));
@@ -92,71 +97,139 @@ class AnnotationReaderTest extends TestCase
 	public function testGetAllAnnotationsMergesClassAndMethods(): void
 	{
 		$class = stdClass::class;
+		$c1    = $this->createMock(DummyAnnotation::class);
+		$m1    = $this->createMock(DummyAnnotation::class);
 
-		// class ann
-		$c1 = $this->createMock(DummyAnnotation::class);
+		// class‐level
 		$this->reflect
 			->method('getClassAttributes')
 			->with($class)
 			->willReturn(listOf($c1));
-
-		$c1
-			->method('setAnnotatedClass')
-			->willReturnSelf();
-		$this->container
-			->method('applyPropertyInjection')
-			->willReturnCallback(fn($a) => $a);
+		$c1->method('setAnnotatedClass')->willReturnSelf();
+		$this->container->method('applyPropertyInjection')->willReturnCallback(fn($a) => $a);
 
 		// method list
-		$m1 = $this->createMock(DummyAnnotation::class);
-		$method = new ReflectionMethod(TestSubject::class, 'bar');
-
+		$methodRef = new ReflectionMethod(TestSubject::class, 'bar');
 		$this->reflect
 			->method('getAnnotatedMethods')
 			->with($class, DummyAnnotation::class)
-			->willReturn(listOf($method));
+			->willReturn(listOf($methodRef));
 
-		// when reading that method
+		// per‐method attributes
 		$this->reflect
 			->method('getMethodAttributes')
 			->with($class, 'bar')
 			->willReturn(listOf($m1));
-
-		$m1
-			->method('setAnnotatedClass')
-			->with($class)
-			->willReturnSelf();
-		$m1
-			->method('setAnnotatedMethod')
-			->with('bar')
-			->willReturnSelf();
+		$m1->method('setAnnotatedClass')->willReturnSelf();
+		$m1->method('setAnnotatedMethod')->willReturnSelf();
 
 		$out = $this->reader->getAllAnnotations($class, DummyAnnotation::class);
 
-		// should contain both c1 and m1
 		$this->assertCount(2, $out);
 		$this->assertEqualsCanonicalizing([$c1, $m1], $out->toArray());
+	}
+
+	public function testGetParameterAnnotationsReturnsOnlyMatching(): void
+	{
+		// use a real ReflectionMethod on ParamSubject
+		$this->reflect
+			->expects($this->once())
+			->method('getClassMethod')
+			->with(ParamSubject::class, 'foo')
+			->willReturn(new ReflectionMethod(ParamSubject::class, 'foo'));
+
+		$paramAnn = $this->reader->getParameterAnnotations(
+			ParamSubject::class,
+			'foo',
+			'x',
+			ParamAnnotation::class
+		);
+
+		$this->assertCount(1, $paramAnn);
+		$this->assertInstanceOf(ParamAnnotation::class, $paramAnn->firstOrNull());
+	}
+
+	public function testGetParameterAnnotationsEmptyWhenNoSuchParam(): void
+	{
+		$this->reflect
+			->method('getClassMethod')
+			->willReturn(new ReflectionMethod(ParamSubject::class, 'foo'));
+
+		$empty = $this->reader->getParameterAnnotations(
+			ParamSubject::class,
+			'foo',
+			'no_such',
+			ParamAnnotation::class
+		);
+
+		$this->assertInstanceOf(Klist::class, $empty);
+		$this->assertCount(0, $empty);
+	}
+
+	public function testGetPropertyAnnotationReturnsFirst(): void
+	{
+		// stub ReflectionClass so getProperty returns real reflection
+		$reflectionClass = new ReflectionClass(PropSubject::class);
+		$this->reflect
+			->expects($this->once())
+			->method('getReflectionClass')
+			->with(PropSubject::class)
+			->willReturn($reflectionClass);
+
+		$ann = $this->reader->getPropertyAnnotation(
+			PropSubject::class,
+			'foo',
+			PropAnnotation::class
+		);
+
+		$this->assertInstanceOf(PropAnnotation::class, $ann);
+		$this->assertSame(PropSubject::class, $ann->getAnnotatedClass());
 	}
 }
 
 
-/**
- * Dummy attribute class for testing.
- */
-#[\Attribute(\Attribute::TARGET_ALL)]
-class DummyAnnotation extends Annotation
+//--------------------------------------------------------
+// Dummy attributes and subjects for testing parameters & props
+//--------------------------------------------------------
+
+#[Attribute(Attribute::TARGET_PARAMETER)]
+class ParamAnnotation extends Annotation
 {
 	public function __construct() {}
 }
 
-/** Another annotation, should be filtered out. */
-#[\Attribute(\Attribute::TARGET_ALL)]
-class OtherAnnotation extends Annotation
+class ParamSubject
+{
+	public function foo(
+		#[ParamAnnotation]
+		$x,
+		$y
+	) {}
+}
+
+#[Attribute(Attribute::TARGET_PROPERTY)]
+class PropAnnotation extends Annotation
 {
 	public function __construct() {}
 }
 
-/** A dummy class with one method for testGetAllAnnotations. */
+class PropSubject
+{
+	#[PropAnnotation]
+	public string $foo = '';
+}
+
+
+//--------------------------------------------------------
+// Re‑use earlier DummyAnnotation, OtherAnnotation, TestSubject
+//--------------------------------------------------------
+
+#[Attribute(Attribute::TARGET_ALL)]
+class DummyAnnotation extends Annotation { public function __construct() {} }
+
+#[Attribute(Attribute::TARGET_ALL)]
+class OtherAnnotation extends Annotation { public function __construct() {} }
+
 class TestSubject
 {
 	#[DummyAnnotation]
