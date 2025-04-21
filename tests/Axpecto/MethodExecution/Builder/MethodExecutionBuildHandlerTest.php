@@ -2,7 +2,7 @@
 
 namespace Axpecto\MethodExecution\Builder;
 
-use Axpecto\Annotation\Annotation;
+use Axpecto\Annotation\BuildAnnotation;
 use Axpecto\ClassBuilder\BuildOutput;
 use Axpecto\Code\MethodCodeGenerator;
 use PHPUnit\Framework\MockObject\Exception;
@@ -35,7 +35,7 @@ class MethodExecutionBuildHandlerTest extends TestCase {
 		$methodName = 'sayHello';
 
 		// 1) Prepare a fake annotation
-		$annotation = $this->createMock( Annotation::class );
+		$annotation = $this->createMock( BuildAnnotation::class );
 		$annotation
 			->method( 'getAnnotatedClass' )
 			->willReturn( $className );

@@ -2,8 +2,8 @@
 
 namespace Axpecto\Repository\Handler;
 
-use Axpecto\Annotation\Annotation;
 use Axpecto\Annotation\AnnotationReader;
+use Axpecto\Annotation\BuildAnnotation;
 use Axpecto\ClassBuilder\BuildOutput;
 use Axpecto\Code\MethodCodeGenerator;
 use Axpecto\Reflection\ReflectionUtils;
@@ -49,7 +49,7 @@ class RepositoryBuildHandlerTest extends TestCase {
 	public function testInterceptSkipsIfInvalidAnnotation(): void {
 		$this->expectException( InvalidArgumentException::class );
 
-		$annotation = $this->createMock( Annotation::class );
+		$annotation = $this->createMock( BuildAnnotation::class );
 		$context    = $this->createMock( BuildOutput::class );
 
 		$this->handler->intercept( $annotation, $context );

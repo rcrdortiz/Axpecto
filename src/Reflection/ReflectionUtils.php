@@ -252,18 +252,6 @@ class ReflectionUtils {
 	}
 
 	/**
-	 * Wrapper for getting attributes from a class as a Klist.
-	 *
-	 * @param string $class
-	 *
-	 * @return Klist
-	 * @throws ReflectionException
-	 */
-	private function getAttributes( string $class ): Klist {
-		return listFrom( $this->getReflectionClass( $class )->getAttributes() );
-	}
-
-	/**
 	 * @throws ReflectionException
 	 */
 	public function getClassMethod( string $class, string $method ): ReflectionMethod {

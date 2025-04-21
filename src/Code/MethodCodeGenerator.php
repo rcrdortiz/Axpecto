@@ -16,6 +16,11 @@ use ReflectionUnionType;
  */
 class MethodCodeGenerator {
 
+	/**
+	 * @psalm-suppress PossiblyUnusedMethod
+	 *
+	 * @param ReflectionUtils $reflectionUtils
+	 */
 	public function __construct(
 		private readonly ReflectionUtils $reflectionUtils,
 	) {
