@@ -116,7 +116,7 @@ class MysqlPersistenceStrategyTest extends TestCase {
 	 * @throws Exception
 	 */
 	public function testFindAllByCriteriaBuildsCorrectSqlAndParams(): void {
-		$criteria    = new Criteria()
+		$criteria    = ( new Criteria() )
 			->addCondition( 'a', 1, Operator::EQUALS )
 			->addCondition( 'b', [ 2, 3 ], Operator::BETWEEN, null )
 			->addCondition( 'c', [ 'x', 'y' ], Operator::IN );
