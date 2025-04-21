@@ -2,7 +2,7 @@
   "name": "rcrdortiz/axpecto",
   "description": "PHP meta framework for building modern, AI oriented, aspect orientated development frameworks.",
   "type": "library",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "require": {
     "php": ">=8.3",
     "ext-mysqli": "*",
