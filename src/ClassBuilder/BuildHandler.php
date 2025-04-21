@@ -2,7 +2,7 @@
 
 namespace Axpecto\ClassBuilder;
 
-use Axpecto\Annotation\Annotation;
+use Axpecto\Annotation\BuildAnnotation;
 
 /**
  * Interface BuildHandler
@@ -22,5 +22,5 @@ interface BuildHandler {
 	 *
 	 * @return void The modified or updated build output.
 	 */
-	public function intercept( Annotation $annotation, BuildOutput $buildOutput ): void;
+	public function intercept( BuildAnnotation $annotation, BuildOutput $buildOutput ): void;
 }

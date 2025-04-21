@@ -4,6 +4,7 @@ namespace Axpecto\Repository\Handler;
 
 use Axpecto\Annotation\Annotation;
 use Axpecto\Annotation\AnnotationReader;
+use Axpecto\Annotation\BuildAnnotation;
 use Axpecto\ClassBuilder\BuildHandler;
 use Axpecto\ClassBuilder\BuildOutput;
 use Axpecto\Code\MethodCodeGenerator;
@@ -27,6 +28,15 @@ readonly class RepositoryBuildHandler implements BuildHandler {
 	private const MAPPER_PROP = 'mapper';
 	private const STORAGE_PROP = 'storage';
 
+	/**
+	 * @psalm-suppress PossiblyUnusedMethod
+	 *
+	 * @param ReflectionUtils $reflectionUtils
+	 * @param MethodCodeGenerator $codeGenerator
+	 * @param RepositoryMethodNameParser $methodNameParser
+	 * @param EntityMetadataService $metadataService
+	 * @param AnnotationReader $annotationReader
+	 */
 	public function __construct(
 		private ReflectionUtils $reflectionUtils,
 		private MethodCodeGenerator $codeGenerator,
@@ -37,11 +47,13 @@ readonly class RepositoryBuildHandler implements BuildHandler {
 	}
 
 	/**
+	 * @psalm-suppress PossiblyUnusedMethod
+	 *
 	 * @throws ReflectionException
 	 * @throws Exception
 	 */
 	#[Override]
-	public function intercept( Annotation $annotation, BuildOutput $buildOutput ): void {
+	public function intercept( BuildAnnotation $annotation, BuildOutput $buildOutput ): void {
 		$repository = $this->ensureRepositoryAnnotation( $annotation );
 		$entityAttr = $this->fetchEntityMetadata( $repository );
 
@@ -56,7 +68,7 @@ readonly class RepositoryBuildHandler implements BuildHandler {
 			->foreach( fn( ReflectionMethod $method ) => $this->buildRepositoryMethod( $method, $buildOutput, $repository, $entityAttr ) );
 	}
 
-	private function ensureRepositoryAnnotation( Annotation $ann ): Repository {
+	private function ensureRepositoryAnnotation( BuildAnnotation $ann ): Repository {
 		if ( ! $ann instanceof Repository || $ann->getAnnotatedMethod() !== null ) {
 			throw new InvalidArgumentException( 'Invalid @Repository annotation usage.' );
 		}

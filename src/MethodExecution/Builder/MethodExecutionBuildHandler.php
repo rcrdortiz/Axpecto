@@ -2,11 +2,10 @@
 
 namespace Axpecto\MethodExecution\Builder;
 
-use Axpecto\Annotation\Annotation;
-use Axpecto\ClassBuilder\BuildOutput;
+use Axpecto\Annotation\BuildAnnotation;
 use Axpecto\ClassBuilder\BuildHandler;
+use Axpecto\ClassBuilder\BuildOutput;
 use Axpecto\Code\MethodCodeGenerator;
-use Exception;
 use Override;
 use ReflectionException;
 
@@ -33,14 +32,15 @@ class MethodExecutionBuildHandler implements BuildHandler {
 	/**
 	 * Intercepts a build chain, adding method interception logic to the output.
 	 *
-	 * @param Annotation $annotation The annotation being processed.
+	 * @psalm-suppress PossiblyUnusedMethod
+	 *
+	 * @param BuildAnnotation $annotation The annotation being processed.
 	 * @param BuildOutput $buildOutput The current build context to modify.
 	 *
 	 * @throws ReflectionException If reflection on the method or class fails.
-	 * @throws Exception
 	 */
 	#[Override]
-	public function intercept( Annotation $annotation, BuildOutput $buildOutput ): void {
+	public function intercept( BuildAnnotation $annotation, BuildOutput $buildOutput ): void {
 		$class  = $annotation->getAnnotatedClass();
 		$method = $annotation->getAnnotatedMethod();
 

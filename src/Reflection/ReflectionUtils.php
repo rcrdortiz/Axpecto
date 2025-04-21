@@ -104,23 +104,6 @@ class ReflectionUtils {
 	}
 
 	/**
-	 * Fetches annotations for a class.
-	 *
-	 * @param class-string<T> $class
-	 * @param string $annotationClass
-	 *
-	 * @return Klist<Annotation>
-	 * @throws ReflectionException
-	 */
-	public function getClassAnnotations( string $class, string $annotationClass = Annotation::class ): Klist {
-		return $this->getAnnotations(
-			attributes: $this->getAttributes( $class ),
-			target: Attribute::TARGET_CLASS,
-			annotationClass: $annotationClass
-		);
-	}
-
-	/**
 	 * Fetches the constructor arguments of a class as Arguments.
 	 *
 	 * @param class-string<T> $class

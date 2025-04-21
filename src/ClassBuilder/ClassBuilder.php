@@ -2,12 +2,11 @@
 
 namespace Axpecto\ClassBuilder;
 
+use Axpecto\Annotation\AnnotationReader;
 use Axpecto\Annotation\BuildAnnotation;
 use Axpecto\Container\Exception\ClassAlreadyBuiltException;
 use Axpecto\Reflection\ReflectionUtils;
 use ReflectionException;
-use Axpecto\Annotation\Annotation;
-use Axpecto\Annotation\AnnotationReader;
 
 /**
  * Class ClassBuilder
@@ -19,7 +18,7 @@ use Axpecto\Annotation\AnnotationReader;
 class ClassBuilder {
 
 	/**
-	 * @param ReflectionUtils       $reflect      Utility for handling reflection of classes, methods, and properties.
+	 * @param ReflectionUtils $reflect Utility for handling reflection of classes, methods, and properties.
 	 * @param array<string, string> $builtClasses Stores already built classes to avoid duplication.
 	 */
 	public function __construct(
@@ -49,7 +48,7 @@ class ClassBuilder {
 
 		// Create and proceed with the build chain
 		$context = new BuildOutput( $class );
-		$buildAnnotations->foreach( fn( Annotation $a ) => $a->getBuilder()?->intercept( $a, $context ) );
+		$buildAnnotations->foreach( fn( BuildAnnotation $a ) => $a->getBuilder()?->intercept( $a, $context ) );
 
 		// If the build output is empty, return the original class
 		if ( $context->isEmpty() ) {
@@ -72,7 +71,7 @@ class ClassBuilder {
 	 * This method constructs the class declaration and body, including properties and methods as defined by the build output.
 	 * It also evaluates the generated class code dynamically using `eval`.
 	 *
-	 * @param string       $class       The original class name to be proxied.
+	 * @param string $class The original class name to be proxied.
 	 * @param BuildOutput $buildOutput The output from the build process, containing properties and methods.
 	 *
 	 * @return string The name of the generated proxy class.
