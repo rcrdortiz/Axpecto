@@ -3,6 +3,7 @@
 namespace Axpecto\MethodExecution;
 
 use Axpecto\Annotation\Annotation;
+use Axpecto\Annotation\MethodExecutionAnnotation;
 use Axpecto\Collection\Klist;
 use Closure;
 
@@ -19,11 +20,11 @@ class MethodExecutionContext {
 	/**
 	 * MethodExecutionContext constructor.
 	 *
-	 * @param string  $className  The fully qualified class name.
-	 * @param string  $methodName The method name.
+	 * @param string $className The fully qualified class name.
+	 * @param string $methodName The method name.
 	 * @param Closure $methodCall The closure representing the method execution.
-	 * @param array   $arguments  Arguments to pass to the method.
-	 * @param Klist   $queue      Queue of annotations to process.
+	 * @param array $arguments Arguments to pass to the method.
+	 * @param Klist $queue Queue of annotations to process.
 	 */
 	public function __construct(
 		public string $className,
@@ -50,8 +51,8 @@ class MethodExecutionContext {
 	 *
 	 * @psalm-suppress PossiblyUnusedMethod
 	 *
-	 * @param string $name  The argument name.
-	 * @param mixed  $value The argument value.
+	 * @param string $name The argument name.
+	 * @param mixed $value The argument value.
 	 */
 	public function addArgument( string $name, mixed $value ): void {
 		$this->arguments[ $name ] = $value;
@@ -67,7 +68,7 @@ class MethodExecutionContext {
 		$this->queue->next();
 		$this->currentAnnotation = $annotation;
 
-		if ( ! $annotation instanceof Annotation ) {
+		if ( ! $annotation instanceof MethodExecutionAnnotation ) {
 			// No more annotations, execute the actual method.
 			return ( $this->methodCall )( ...$this->arguments );
 		}

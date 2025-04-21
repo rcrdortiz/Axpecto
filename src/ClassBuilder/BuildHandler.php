@@ -2,7 +2,7 @@
 
 namespace Axpecto\ClassBuilder;
 
-use Axpecto\Annotation\Annotation;
+use Axpecto\Annotation\BuildAnnotation;
 
 /**
  * Interface BuildHandler
@@ -18,9 +18,9 @@ interface BuildHandler {
 	 * This method allows the handler to modify the build output by interacting with the build chain
 	 * and using information from the provided annotation and current build state.
 	 *
-	 * @param BuildContext $context The current build output, which can be augmented by the handler.
+	 * @param BuildOutput $buildOutput The current build output, which can be augmented by the handler.
 	 *
 	 * @return void The modified or updated build output.
 	 */
-	public function intercept( Annotation $annotation, BuildContext $context ): void;
+	public function intercept( BuildAnnotation $annotation, BuildOutput $buildOutput ): void;
 }

@@ -177,12 +177,9 @@ class Kmap implements CollectionInterface {
 	 */
 	#[Override]
 	public function filter( Closure $predicate ): static {
-		$filtered = [];
-		foreach ( $this->array as $key => $value ) {
-			if ( $predicate( $key, $value ) ) {
-				$filtered[ $key ] = $value;
-			}
-		}
+		$filtered = array_filter( $this->array, function ( $value, $key ) use ( $predicate ) {
+			return $predicate( $key, $value );
+		}, ARRAY_FILTER_USE_BOTH );
 
 		if ( $this->mutable ) {
 			$this->array = $filtered;

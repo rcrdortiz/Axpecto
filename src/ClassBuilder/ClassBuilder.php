@@ -2,11 +2,11 @@
 
 namespace Axpecto\ClassBuilder;
 
+use Axpecto\Annotation\AnnotationReader;
+use Axpecto\Annotation\BuildAnnotation;
 use Axpecto\Container\Exception\ClassAlreadyBuiltException;
 use Axpecto\Reflection\ReflectionUtils;
 use ReflectionException;
-use Axpecto\Annotation\Annotation;
-use Axpecto\Annotation\AnnotationReader;
 
 /**
  * Class ClassBuilder
@@ -18,7 +18,7 @@ use Axpecto\Annotation\AnnotationReader;
 class ClassBuilder {
 
 	/**
-	 * @param ReflectionUtils       $reflect      Utility for handling reflection of classes, methods, and properties.
+	 * @param ReflectionUtils $reflect Utility for handling reflection of classes, methods, and properties.
 	 * @param array<string, string> $builtClasses Stores already built classes to avoid duplication.
 	 */
 	public function __construct(
@@ -44,11 +44,11 @@ class ClassBuilder {
 		}
 
 		// Get all the Build annotations for the class and its methods
-		$buildAnnotations = $this->reader->getAllBuildAnnotations( $class );
+		$buildAnnotations = $this->reader->getAllAnnotations( $class, BuildAnnotation::class );
 
 		// Create and proceed with the build chain
-		$context = new BuildContext( $class );
-		$buildAnnotations->foreach( fn( Annotation $a ) => $a->getBuilder()?->intercept( $a, $context ) );
+		$context = new BuildOutput( $class );
+		$buildAnnotations->foreach( fn( BuildAnnotation $a ) => $a->getBuilder()?->intercept( $a, $context ) );
 
 		// If the build output is empty, return the original class
 		if ( $context->isEmpty() ) {
@@ -71,13 +71,13 @@ class ClassBuilder {
 	 * This method constructs the class declaration and body, including properties and methods as defined by the build output.
 	 * It also evaluates the generated class code dynamically using `eval`.
 	 *
-	 * @param string       $class       The original class name to be proxied.
-	 * @param BuildContext $buildOutput The output from the build process, containing properties and methods.
+	 * @param string $class The original class name to be proxied.
+	 * @param BuildOutput $buildOutput The output from the build process, containing properties and methods.
 	 *
 	 * @return string The name of the generated proxy class.
 	 * @throws ReflectionException
 	 */
-	private function generateProxyClass( string $class, BuildContext $buildOutput ): string {
+	private function generateProxyClass( string $class, BuildOutput $buildOutput ): string {
 		// Generate a unique proxy class name by replacing backslashes in the class name.
 		$proxiedClassName = str_replace( "\\", '_', $class ) . 'Proxy';
 
