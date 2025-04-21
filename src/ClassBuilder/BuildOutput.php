@@ -21,7 +21,7 @@ use Exception;
  *
  * @package Axpecto\Aop\Build
  */
-class BuildContext {
+class BuildOutput {
 
 	/**
 	 * Constructor for the BuildOutput class.

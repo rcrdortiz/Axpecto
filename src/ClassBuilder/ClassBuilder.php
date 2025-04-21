@@ -2,6 +2,7 @@
 
 namespace Axpecto\ClassBuilder;
 
+use Axpecto\Annotation\BuildAnnotation;
 use Axpecto\Container\Exception\ClassAlreadyBuiltException;
 use Axpecto\Reflection\ReflectionUtils;
 use ReflectionException;
@@ -44,10 +45,10 @@ class ClassBuilder {
 		}
 
 		// Get all the Build annotations for the class and its methods
-		$buildAnnotations = $this->reader->getAllBuildAnnotations( $class );
+		$buildAnnotations = $this->reader->getAllAnnotations( $class, BuildAnnotation::class );
 
 		// Create and proceed with the build chain
-		$context = new BuildContext( $class );
+		$context = new BuildOutput( $class );
 		$buildAnnotations->foreach( fn( Annotation $a ) => $a->getBuilder()?->intercept( $a, $context ) );
 
 		// If the build output is empty, return the original class
@@ -72,12 +73,12 @@ class ClassBuilder {
 	 * It also evaluates the generated class code dynamically using `eval`.
 	 *
 	 * @param string       $class       The original class name to be proxied.
-	 * @param BuildContext $buildOutput The output from the build process, containing properties and methods.
+	 * @param BuildOutput $buildOutput The output from the build process, containing properties and methods.
 	 *
 	 * @return string The name of the generated proxy class.
 	 * @throws ReflectionException
 	 */
-	private function generateProxyClass( string $class, BuildContext $buildOutput ): string {
+	private function generateProxyClass( string $class, BuildOutput $buildOutput ): string {
 		// Generate a unique proxy class name by replacing backslashes in the class name.
 		$proxiedClassName = str_replace( "\\", '_', $class ) . 'Proxy';
 

@@ -5,7 +5,6 @@ namespace Axpecto\Reflection;
 use Attribute;
 use Axpecto\Annotation\Annotation;
 use Axpecto\Collection\Klist;
-use Axpecto\Collection\Kmap;
 use Axpecto\Reflection\Dto\Argument;
 use ReflectionAttribute;
 use ReflectionClass;
@@ -30,46 +29,52 @@ class ReflectionUtils {
 	private array $reflectionClasses = [];
 
 	/**
-	 * Generates a method definition string with visibility, name, arguments, and return type.
+	 * Returns a ReflectionClass instance, using caching for optimization.
 	 *
-	 * @param string $class
-	 * @param string $method
+	 * @param class-string<T> $class
 	 *
-	 * @return string
+	 * @return ReflectionClass<T>
 	 * @throws ReflectionException
 	 */
-	public function getMethodDefinitionString( string $class, string $method ): string {
-		$reflectionMethod = $this->getReflectionClass( $class )->getMethod( $method );
+	public function getReflectionClass( string $class ): ReflectionClass {
+		return $this->reflectionClasses[ $class ] ??= new ReflectionClass( $class );
+	}
 
-		$visibility         = $reflectionMethod->isProtected() ? 'protected' : 'public';
-		$argumentListString = listFrom( $reflectionMethod->getParameters() )
-			->map( function ( ReflectionParameter $arg ) {
-				$definition = ( $arg->hasType() ? $arg->getType() . ' ' : '' ) . ( $arg->isVariadic() ? '...' : '' ) . "\${$arg->getName()}";
-				if ( $arg->isDefaultValueAvailable() ) {
-					$definition .= " = " . var_export( $arg->getDefaultValue(), true );
-				}
+	/**
+	 * @return Klist<Attribute>
+	 * @throws ReflectionException
+	 */
+	public function getClassAttributes( string $class ): Klist {
+		return listFrom( $this->getReflectionClass( $class )->getAttributes() )
+			->map( fn( ReflectionAttribute $attribute ) => $attribute->newInstance() );
+	}
 
-				return $definition;
-			} )
-			->join( ',' );
-
-		$returnType = $reflectionMethod->hasReturnType() ? ': ' . $reflectionMethod->getReturnType() : '';
-
-		return "$visibility function {$reflectionMethod->getName()}($argumentListString)$returnType";
+	/**
+	 * Returns a list of attributes for a method.
+	 *
+	 * @return Klist<Attribute>
+	 * @throws ReflectionException
+	 */
+	public function getMethodAttributes( string $class, string $method ): Klist {
+		return listFrom( $this->getReflectionClass( $class )->getMethod( $method )->getAttributes() )
+			->map( fn( ReflectionAttribute $attribute ) => $attribute->newInstance() );
 	}
 
 	/**
 	 * Fetches methods annotated with a specific annotation class.
 	 *
 	 * @param class-string<T> $class
-	 * @param string          $with
+	 * @param class-string<T> $with
 	 *
 	 * @return Klist<ReflectionMethod>
 	 * @throws ReflectionException
 	 */
 	public function getAnnotatedMethods( string $class, string $with = Annotation::class ): Klist {
-		return $this->getMethods( $class )
-		            ->filter( fn( ReflectionMethod $method ) => $this->methodHasAnnotations( $method, $with ) );
+		return listFrom( $this->getReflectionClass( $class )->getMethods() )
+			->filter( fn( ReflectionMethod $m ) => listFrom( $m->getAttributes() )
+				->filter( fn( ReflectionAttribute $attribute ) => $attribute->getName() === $with )
+				->isNotEmpty()
+			);
 	}
 
 	/**
@@ -102,60 +107,15 @@ class ReflectionUtils {
 	 * Fetches annotations for a class.
 	 *
 	 * @param class-string<T> $class
-	 * @param string          $annotationClass
+	 * @param string $annotationClass
 	 *
 	 * @return Klist<Annotation>
 	 * @throws ReflectionException
 	 */
 	public function getClassAnnotations( string $class, string $annotationClass = Annotation::class ): Klist {
 		return $this->getAnnotations(
-			attributes:      $this->getAttributes( $class ),
-			target:          Attribute::TARGET_CLASS,
-			annotationClass: $annotationClass
-		);
-	}
-
-	/**
-	 * Fetches annotations for a parameter.
-	 *
-	 * @param class-string $class           The class name.
-	 * @param string       $method          The method name (use "__construct" for constructor).
-	 * @param string       $parameterName   The parameter name.
-	 * @param string       $annotationClass The annotation class to filter by.
-	 *
-	 * @return Klist<Annotation>
-	 * @throws ReflectionException
-	 */
-	public function getParamAnnotations(
-		string $class,
-		string $method,
-		string $parameterName,
-		string $annotationClass = Annotation::class
-	): Klist {
-		// Get the reflection of the specified method.
-		$reflectionMethod = $this->getReflectionClass( $class )->getMethod( $method );
-
-		// Find the parameter by name.
-		$reflectionParameter = null;
-		foreach ( $reflectionMethod->getParameters() as $parameter ) {
-			if ( $parameter->getName() === $parameterName ) {
-				$reflectionParameter = $parameter;
-				break;
-			}
-		}
-
-		if ( $reflectionParameter === null ) {
-			throw new ReflectionException( "Parameter {$parameterName} not found in method {$method} of class {$class}" );
-		}
-
-		// Get attributes from the parameter.
-		$attributes = listFrom( $reflectionParameter->getAttributes() );
-
-		// Filter the annotations by target.
-		// For parameters, the target is Attribute::TARGET_PARAMETER.
-		return $this->getAnnotations(
-			attributes:      $attributes,
-			target:          Attribute::TARGET_PARAMETER,
+			attributes: $this->getAttributes( $class ),
+			target: Attribute::TARGET_CLASS,
 			annotationClass: $annotationClass
 		);
 	}
@@ -193,7 +153,7 @@ class ReflectionUtils {
 	 *
 	 * @param object $instance
 	 * @param string $property
-	 * @param mixed  $value
+	 * @param mixed $value
 	 *
 	 * @return void
 	 * @throws ReflectionException
@@ -208,14 +168,14 @@ class ReflectionUtils {
 	/**
 	 * Gets a map of method arguments and their values.
 	 *
-	 * @param string                     $class
-	 * @param string                     $method
+	 * @param string $class
+	 * @param string $method
 	 * @param array<ReflectionParameter> $arguments
 	 *
 	 * @return array
 	 * @throws ReflectionException
 	 */
-	public function mapValuesToArguments( string $class, string $method, array $arguments ) {
+	public function mapValuesToArguments( string $class, string $method, array $arguments ): array {
 		$parameters = $this->getReflectionClass( $class )
 		                   ->getMethod( $method )
 		                   ->getParameters();
@@ -232,59 +192,6 @@ class ReflectionUtils {
 	}
 
 	/**
-	 * Gets default argument values for a method.
-	 *
-	 * @psalm-suppress PossiblyUnusedMethod
-	 *
-	 * @param string $class
-	 * @param string $method
-	 *
-	 * @return Kmap<string, mixed>
-	 * @throws ReflectionException
-	 */
-	public function getMethodArgumentsDefaults( string $class, string $method ): Kmap {
-		$parameters = $this->getReflectionClass( $class )->getMethod( $method )->getParameters();
-		if ( count( $parameters ) === 0 ) {
-			return emptyMap();
-		}
-
-		return listFrom( $parameters )
-			->mapOf( fn( ReflectionParameter $value ) => [ $value->getName() => $value->isDefaultValueAvailable() ? $value->getDefaultValue() : null, ] )
-			->filterNotNull();
-	}
-
-	/**
-	 * Fetches an annotation on a property.
-	 *
-	 * @param string $class
-	 * @param string $property
-	 * @param string $with
-	 *
-	 * @return Annotation|null
-	 * @throws ReflectionException
-	 */
-	public function getPropertyAnnotated( string $class, string $property, string $with = Annotation::class ): ?Annotation {
-		return listFrom( $this->getReflectionClass( $class )->getProperty( $property )->getAttributes() )
-			->filter( fn( ReflectionAttribute $attribute ) => $attribute->getName() === $with )
-			->firstOrNull()?->newInstance();
-	}
-
-	/**
-	 * Gets the return type of a method.
-	 *
-	 * @param string $class
-	 * @param string $method
-	 *
-	 * @return string|null
-	 * @throws ReflectionException
-	 */
-	public function getReturnType( string $class, string $method ): ?string {
-		$method = $this->getReflectionClass( $class )->getMethod( $method );
-
-		return $method->hasReturnType() ? $method->getReturnType()->getName() : null;
-	}
-
-	/**
 	 * Checks if the supplied class is an interface.
 	 *
 	 * @param $class
@@ -294,27 +201,6 @@ class ReflectionUtils {
 	 */
 	public function isInterface( $class ): bool {
 		return $this->getReflectionClass( $class )->isInterface();
-	}
-
-	/**
-	 * Returns a list of attributes for a method.
-	 *
-	 * @return Klist<Attribute>
-	 * @throws ReflectionException
-	 */
-	public function getMethodAttributes( string $class, string $method ): Klist {
-		return listFrom( $this->getReflectionClass( $class )->getMethod( $method )->getAttributes() )
-			->map( fn( ReflectionAttribute $attribute ) => $attribute->newInstance() );
-	}
-
-	/**
-	 * @return Klist<Attribute>
-	 * @throws ReflectionException
-	 */
-	public function getClassAttributes( string $class ): Klist {
-		return listFrom( $this->getReflectionClass( $class )->getAttributes() )
-			->filter( fn( ReflectionAttribute $attribute ) => class_exists( $attribute->getName() ) )
-			->map( fn( ReflectionAttribute $attribute ) => $attribute->newInstance() );
 	}
 
 	/**
@@ -330,7 +216,7 @@ class ReflectionUtils {
 		$name     = $reflection->getName();
 		$type     = $reflection->getType()?->getName() ?? 'mixed';
 		$nullable = $reflection->getType()?->allowsNull() ?? false;
-		$default = null;
+		$default  = null;
 
 		if ( $reflection instanceof ReflectionParameter ) {
 			if ( $reflection->isDefaultValueAvailable() ) {
@@ -343,8 +229,8 @@ class ReflectionUtils {
 		}
 
 		return new Argument(
-			name:    $name,
-			type:    $type,
+			name: $name,
+			type: $type,
 			nullable: $nullable,
 			default: $default
 		);
@@ -354,31 +240,15 @@ class ReflectionUtils {
 	 * Filters properties that are annotated with a specific annotation.
 	 *
 	 * @param ReflectionProperty $property
-	 * @param string             $annotationClass
+	 * @param string $annotationClass
 	 *
 	 * @return bool
 	 */
 	private function filterAnnotatedProperties( ReflectionProperty $property, string $annotationClass ): bool {
 		return $this->getAnnotations(
-			attributes:      listFrom( $property->getAttributes() ),
-			target:          Attribute::TARGET_PROPERTY,
+			attributes: listFrom( $property->getAttributes() ),
+			target: Attribute::TARGET_PROPERTY,
 			annotationClass: $annotationClass
-		)->isNotEmpty();
-	}
-
-	/**
-	 * Checks if a method is annotated with a specific attribute.
-	 *
-	 * @param ReflectionMethod $method
-	 * @param string           $annotationClass
-	 *
-	 * @return bool
-	 */
-	private function methodHasAnnotations( ReflectionMethod $method, string $annotationClass = Annotation::class ): bool {
-		return $this->getAnnotations(
-			attributes:      listFrom( $method->getAttributes() ),
-			target:          Attribute::TARGET_METHOD,
-			annotationClass: $annotationClass,
 		)->isNotEmpty();
 	}
 
@@ -386,8 +256,8 @@ class ReflectionUtils {
 	 * Fetches annotations based on the target.
 	 *
 	 * @param Klist<ReflectionAttribute> $attributes
-	 * @param string|null                $target
-	 * @param string                     $annotationClass
+	 * @param string|null $target
+	 * @param string $annotationClass
 	 *
 	 * @return Klist<Annotation>
 	 */
@@ -396,18 +266,6 @@ class ReflectionUtils {
 			->filter( fn( ReflectionAttribute $attribute ) => $attribute->getTarget() == $target )
 			->map( fn( ReflectionAttribute $attribute ) => class_exists( $attribute->getName() ) ? $attribute->newInstance() : null )
 			->filter( fn( $annotation ) => $annotation instanceof $annotationClass );
-	}
-
-	/**
-	 * Returns a ReflectionClass instance, using caching for optimization.
-	 *
-	 * @param class-string<T> $class
-	 *
-	 * @return ReflectionClass<T>
-	 * @throws ReflectionException
-	 */
-	private function getReflectionClass( string $class ): ReflectionClass {
-		return $this->reflectionClasses[ $class ] ??= new ReflectionClass( $class );
 	}
 
 	/**
@@ -420,5 +278,12 @@ class ReflectionUtils {
 	 */
 	private function getAttributes( string $class ): Klist {
 		return listFrom( $this->getReflectionClass( $class )->getAttributes() );
+	}
+
+	/**
+	 * @throws ReflectionException
+	 */
+	public function getClassMethod( string $class, string $method ): ReflectionMethod {
+		return $this->getReflectionClass( $class )->getMethod( $method );
 	}
 }

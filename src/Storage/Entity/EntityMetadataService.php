@@ -2,6 +2,7 @@
 
 namespace Axpecto\Storage\Entity;
 
+use Axpecto\Annotation\AnnotationReader;
 use Axpecto\Collection\Klist;
 use Axpecto\Reflection\Dto\Argument;
 use Axpecto\Reflection\ReflectionUtils;
@@ -11,15 +12,17 @@ use ReflectionException;
 
 class EntityMetadataService {
 
-	private const CONSTRUCTOR_METHOD = '__construct';
+	private const string CONSTRUCTOR_METHOD = '__construct';
 
 	/**
 	 * @psalm-suppress PossiblyUnusedMethod
 	 *
 	 * @param ReflectionUtils $reflectionUtils
+	 * @param AnnotationReader $annotationReader
 	 */
 	public function __construct(
 		private readonly ReflectionUtils $reflectionUtils,
+		private readonly AnnotationReader $annotationReader,
 	) {
 	}
 
@@ -44,7 +47,7 @@ class EntityMetadataService {
 	 * @throws Exception
 	 */
 	public function getEntity( string $entityClass ): Entity {
-		$entityAnnotation = $this->reflectionUtils
+		$entityAnnotation = $this->annotationReader
 			->getClassAnnotations( $entityClass, Entity::class )
 			->firstOrNull();
 
@@ -60,7 +63,7 @@ class EntityMetadataService {
 	 */
 	private function mapArgumentToEntityField( Argument $argument, string $entity ): EntityField {
 		/* @var Column $column */
-		$column = $this->reflectionUtils->getParamAnnotations(
+		$column = $this->annotationReader->getParameterAnnotations(
 			$entity,
 			self::CONSTRUCTOR_METHOD,
 			$argument->name,
@@ -68,17 +71,17 @@ class EntityMetadataService {
 		)->firstOrNull();
 
 		return new EntityField(
-			name:               $argument->name,
-			type:               $column?->type ?? $argument->type,
-			nullable:           $column?->isNullable ?? $argument->nullable,
-			entityClass:        $entity,
-			default:            $column?->defaultValue ?? $argument->default ?? EntityField::NO_DEFAULT_VALUE_SPECIFIED,
+			name: $argument->name,
+			type: $column?->type ?? $argument->type,
+			nullable: $column?->isNullable ?? $argument->nullable,
+			entityClass: $entity,
+			default: $column?->defaultValue ?? $argument->default ?? EntityField::NO_DEFAULT_VALUE_SPECIFIED,
 			persistenceMapping: $column?->name ?? $argument->name,
-			isAutoIncrement:    $column?->autoIncrement ?? false,
-			isPrimary:          $column?->isPrimary ?? false,
-			isUnique:           $column?->isUnique ?? false,
-			isIndexed:          $column?->isIndexed ?? false,
-			onUpdate:           $column?->onUpdate ?? false,
+			isAutoIncrement: $column?->autoIncrement ?? false,
+			isPrimary: $column?->isPrimary ?? false,
+			isUnique: $column?->isUnique ?? false,
+			isIndexed: $column?->isIndexed ?? false,
+			onUpdate: $column?->onUpdate ?? false,
 		);
 	}
 }

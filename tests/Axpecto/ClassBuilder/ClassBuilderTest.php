@@ -4,7 +4,9 @@ namespace Axpecto\ClassBuilder\Tests;
 
 use Axpecto\Annotation\Annotation;
 use Axpecto\Annotation\AnnotationReader;
-use Axpecto\ClassBuilder\BuildContext;
+use Axpecto\Annotation\BuildAnnotation;
+use Axpecto\ClassBuilder\BuildHandler;
+use Axpecto\ClassBuilder\BuildOutput;
 use Axpecto\ClassBuilder\ClassBuilder;
 use Axpecto\Collection\Klist;
 use Axpecto\Collection\Kmap;
@@ -33,8 +35,8 @@ class ClassBuilderTest extends TestCase {
 		// Mock the reader to return no annotations
 		$this->annotationReaderMock
 			->expects( $this->once() )
-			->method( 'getAllBuildAnnotations' )
-			->with( $class )
+			->method( 'getAllAnnotations' )
+			->with( $class, BuildAnnotation::class )
 			->willReturn( emptyList() );
 
 		// Execute the build method
@@ -64,8 +66,8 @@ class ClassBuilderTest extends TestCase {
 		$property             = '#[Inject] private MethodExecutionProxy $proxy;';
 
 		// Mock the reader to return an annotation with a builder
-		$annotationMock = $this->createMock( Annotation::class );
-		$builderMock    = $this->createMock( \Axpecto\ClassBuilder\BuildHandler::class );
+		$annotationMock = $this->createMock( BuildAnnotation::class );
+		$builderMock    = $this->createMock( BuildHandler::class );
 		$annotationMock
 			->method( 'getBuilder' )
 			->willReturn( $builderMock );
@@ -74,15 +76,9 @@ class ClassBuilderTest extends TestCase {
 		$annotations = new Klist( [ $annotationMock ] );
 		$this->annotationReaderMock
 			->expects( $this->once() )
-			->method( 'getAllBuildAnnotations' )
-			->with( $class )
+			->method( 'getAllAnnotations' )
+			->with( $class, BuildAnnotation::class )
 			->willReturn( $annotations );
-
-		// Mock the reflection utility to provide method signature and implementation
-		$this->reflectionUtilsMock
-			->method( 'getMethodDefinitionString' )
-			->with( $class, 'testMethod' )
-			->willReturn( $methodSignature );
 
 		// Expect the builder to be called and add a method/property
 		$builderMock
@@ -102,7 +98,7 @@ class ClassBuilderTest extends TestCase {
 
 	public function testGenerateProxyClass(): void {
 		$class       = SampleClass::class;
-		$buildOutput = new BuildContext(
+		$buildOutput = new BuildOutput(
 			$class,
 			new Kmap( [ 'testMethod' => 'public function testMethod() {}' ] ),
 			new Kmap( [ 'proxy' => '#[Inject] private MethodExecutionProxy $proxy;' ] )

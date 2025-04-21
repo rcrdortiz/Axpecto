@@ -3,9 +3,12 @@
 namespace Axpecto\Repository\Handler;
 
 use Axpecto\Annotation\Annotation;
-use Axpecto\ClassBuilder\BuildContext;
+use Axpecto\Annotation\AnnotationReader;
 use Axpecto\ClassBuilder\BuildHandler;
+use Axpecto\ClassBuilder\BuildOutput;
+use Axpecto\Code\MethodCodeGenerator;
 use Axpecto\Collection\Klist;
+use Axpecto\Collection\Kmap;
 use Axpecto\Reflection\ReflectionUtils;
 use Axpecto\Repository\Mapper\ArrayToEntityMapper;
 use Axpecto\Repository\Repository;
@@ -21,118 +24,159 @@ use ReflectionMethod;
 use ReflectionParameter;
 
 readonly class RepositoryBuildHandler implements BuildHandler {
+	private const MAPPER_PROP = 'mapper';
+	private const STORAGE_PROP = 'storage';
 
-	/**
-	 * @psalm-suppress PossiblyUnusedMethod
-	 *
-	 * @param ReflectionUtils $reflectUtils
-	 * @param RepositoryMethodNameParser $nameParser
-	 * @param EntityMetadataService $metadataService
-	 */
 	public function __construct(
-		private ReflectionUtils $reflectUtils,
-		private RepositoryMethodNameParser $nameParser,
+		private ReflectionUtils $reflectionUtils,
+		private MethodCodeGenerator $codeGenerator,
+		private RepositoryMethodNameParser $methodNameParser,
 		private EntityMetadataService $metadataService,
+		private AnnotationReader $annotationReader,
 	) {
 	}
 
 	/**
 	 * @throws ReflectionException
+	 * @throws Exception
 	 */
 	#[Override]
-	public function intercept( Annotation $annotation, BuildContext $context ): void {
-		if ( ! $annotation instanceof Repository || $annotation->getAnnotatedMethod() !== null ) {
-			throw new InvalidArgumentException( 'Invalid annotation type or method.' );
-		}
+	public function intercept( Annotation $annotation, BuildOutput $buildOutput ): void {
+		$repository = $this->ensureRepositoryAnnotation( $annotation );
+		$entityAttr = $this->fetchEntityMetadata( $repository );
 
-		/** @var EntityAttribute $entityAnnotation */
-		$entityAnnotation = $this->reflectUtils
-			->getClassAnnotations( $annotation->entityClass, EntityAttribute::class )
-			->firstOrNull();
-
-		if ( ! $entityAnnotation ) {
+		// If the entity is not annotated, nothing to build
+		// @TODO Maybe throw an exception here?
+		if ( $entityAttr === null ) {
 			return;
 		}
 
-		$this->reflectUtils
-			->getAbstractMethods( $annotation->getAnnotatedClass() )
-			->foreach( fn( ReflectionMethod $m ) => $this->implementAbstractMethod( $m, $context, $annotation, $entityAnnotation ) );
+		$this->reflectionUtils
+			->getAbstractMethods( $repository->getAnnotatedClass() )
+			->foreach( fn( ReflectionMethod $method ) => $this->buildRepositoryMethod( $method, $buildOutput, $repository, $entityAttr ) );
+	}
+
+	private function ensureRepositoryAnnotation( Annotation $ann ): Repository {
+		if ( ! $ann instanceof Repository || $ann->getAnnotatedMethod() !== null ) {
+			throw new InvalidArgumentException( 'Invalid @Repository annotation usage.' );
+		}
+
+		return $ann;
 	}
 
 	/**
-	 * Implements an abstract method by generating code that creates a Criteria,
-	 * adds conditions based on parsed method parts (using the mapped field name if defined),
-	 * and returns the storage call result.
-	 *
-	 * @param ReflectionMethod $method
-	 * @param BuildContext $output
-	 * @param Repository $repositoryAnnotation
-	 * @param EntityAttribute $entityAnnotation
+	 * @throws ReflectionException
+	 */
+	private function fetchEntityMetadata( Repository $repo ): ?EntityAttribute {
+		return $this->annotationReader
+			->getClassAnnotations( $repo->entityClass, EntityAttribute::class )
+			->firstOrNull();
+	}
+
+	/**
+	 * Builds a single repository method: injects deps, validates params, generates code.
 	 *
 	 * @throws Exception
-	 *
-	 * @TODO Re-implement this whole method.
 	 */
-	protected function implementAbstractMethod(
+	private function buildRepositoryMethod(
 		ReflectionMethod $method,
-		BuildContext $output,
-		Repository $repositoryAnnotation,
-		EntityAttribute $entityAnnotation
+		BuildOutput $buildOutput,
+		Repository $repository,
+		EntityAttribute $entityAttr
 	): void {
-		$entityClass = $repositoryAnnotation->entityClass;
+		$entityClass = $repository->entityClass;
 
-		// Inject dependencies: the mapper and the storage.
-		$mapperReference  = $output->injectProperty( 'mapper', ArrayToEntityMapper::class );
-		$storageReference = $output->injectProperty( 'storage', $entityAnnotation->storage );
+		$this->injectDependencies( $buildOutput, $entityAttr );
+		$fieldMap = $this->buildFieldToColumnMap( $entityClass );
+		$parts    = $this->methodNameParser->parse( $method->getName() );
 
-		// Build an associative map of field names to their database field names.
-		$fields = $this->metadataService
-			->getFields( $entityClass )
-			->mapOf( fn( EntityField $field ) => [ $field->name => $field->persistenceMapping ] );
+		$this->assertArgumentCountMatches( $method, $parts );
 
-		// Parse the method name into parts (ParsedMethodPart instances).
-		$methodParts = $this->nameParser->parse( $method->getName() );
+		$body      = $this->generateCriteriaBody( $method, $parts, $fieldMap, $entityClass );
+		$signature = $this->codeGenerator->implementMethodSignature( $method->class, $method->getName() );
 
-		// Calculate the expected argument count from the parsed method parts.
-		$expectedCount = $methodParts->reduce( fn( $count, ParsedMethodPart $part ) => $count + $part->operator->argumentCount(), 0 );
-
-		// Compare with the declared parameter count of the method.
-		$declaredParameters = listFrom( $method->getParameters() );
-		$declaredCount      = $declaredParameters->count();
-		if ( $declaredCount !== $expectedCount ) {
-			throw new Exception( "Method {$method->getName()} declares $declaredCount arguments, but parsed conditions require $expectedCount." );
-		}
-
-		// Create a list of parameter names for the method.
-		$paramNames = $declaredParameters->map( fn( ReflectionParameter $p ) => $p->name );
-
-		// Filter out the method parts that have a field defined and map with the database field names.
-		$mappedMethodParts = $methodParts
-			->filter( fn( ParsedMethodPart $part ) => $part->field )
-			->map( fn( ParsedMethodPart $part ) => $part->copy( field: $fields[ $part->field ] ?? throw new Exception( "Unknown field: $part->field" ) ) );
-
-		$code = $mappedMethodParts->reduce(
-			fn( $carry, ParsedMethodPart $part ) => $carry . $this->mapMethodPartToCode( $part, $paramNames ),
-			initial: "\$criteria = new \\Axpecto\\Storage\\Criteria\\Criteria();\n"
-		);
-
-		// Generate the final storage call.
-		$code .= "\t\treturn \$this->{$storageReference}->findAllByCriteria(\$criteria, '{$entityClass}')\n";
-		$code .= "\t\t    ->map(fn(\$item) => \$this->{$mapperReference}->map('{$entityClass}', \$item));";
-
-		$output->addMethod(
+		$buildOutput->addMethod(
 			name: $method->getName(),
-			signature: $this->reflectUtils->getMethodDefinitionString( $method->class, $method->getName() ),
-			implementation: $code,
+			signature: $signature,
+			implementation: $body,
 		);
 	}
 
-	private function mapMethodPartToCode( ParsedMethodPart $part, Klist $params ): string {
+	/**
+	 * @throws Exception
+	 */
+	private function injectDependencies( BuildOutput $out, EntityAttribute $entityAttr ): void {
+		$out->injectProperty( self::MAPPER_PROP, ArrayToEntityMapper::class );
+		$out->injectProperty( self::STORAGE_PROP, $entityAttr->storage );
+	}
+
+	/**
+	 * @throws ReflectionException
+	 */
+	private function buildFieldToColumnMap( string $entityClass ): Kmap {
+		return $this->metadataService
+			->getFields( $entityClass )
+			->mapOf( fn( EntityField $f ) => [ $f->name => $f->persistenceMapping ] );
+	}
+
+	/**
+	 * @throws Exception
+	 */
+	private function assertArgumentCountMatches( ReflectionMethod $method, Klist $parts ): void {
+		$expected = $parts->reduce( fn( int $count, ParsedMethodPart $part ) => $count + $part->operator->argumentCount(), 0 );
+		$actual   = count( $method->getParameters() );
+
+		if ( $expected !== $actual ) {
+			throw new Exception(
+				sprintf(
+					'%s declares %d args, but parsed conditions require %d.',
+					$method->getName(),
+					$actual,
+					$expected
+				)
+			);
+		}
+	}
+
+	/**
+	 * Generates the method body that builds the Criteria and returns the mapped results.
+	 *
+	 * @throws Exception
+	 */
+	private function generateCriteriaBody(
+		ReflectionMethod $method,
+		Klist $parts,
+		Kmap $fieldMap,
+		string $entityClass
+	): string {
+		// Initialize criteria
+		$code = "\$criteria = new \\Axpecto\\Storage\\Criteria\\Criteria();\n";
+
+		// Extract parameter names in declaration order
+		$paramNames = listFrom( $method->getParameters() )
+			->map( fn( ReflectionParameter $p ) => $p->getName() );
+
+		// For each part, map field name, then append condition code
+		$code = $parts
+			->filter( fn( ParsedMethodPart $p ) => (bool) $p->field )
+			->map( fn( ParsedMethodPart $p ) => $p->copy( field: $fieldMap[ $p->field ] ?? throw new Exception( "Unknown field {$p->field}" ) ) )
+			->reduce( fn( string $carry, ParsedMethodPart $part ) => $carry . $this->mapConditionCode( $part, $paramNames ), $code );
+
+		// Append the final storage call
+		$code .= "\t\treturn \$this->" . self::STORAGE_PROP .
+		         "->findAllByCriteria(\$criteria, '$entityClass')\n";
+		$code .= "\t\t    ->map(fn(\$item) => \$this->" .
+		         self::MAPPER_PROP . "->map('$entityClass', \$item));";
+
+		return $code;
+	}
+
+	private function mapConditionCode( ParsedMethodPart $part, Klist $params ): string {
 		return match ( $part->operator ) {
-			Operator::BETWEEN => "\t\t\$criteria->addCondition('$part->field', [\${$params->nextAndGet()}, \${$params->nextAndGet()}], \\Axpecto\\Storage\\Criteria\\Operator::BETWEEN, \\Axpecto\\Storage\\Criteria\\LogicOperator::{$part->logicOperator->name});\n",
+			Operator::BETWEEN => "\t\t\$criteria->addCondition('{$part->field}', [\${$params->nextAndGet()}, \${$params->nextAndGet()}], \\Axpecto\\Storage\\Criteria\\Operator::BETWEEN, \\Axpecto\\Storage\\Criteria\\LogicOperator::{$part->logicOperator->name});\n",
 			Operator::IS_NULL,
-			Operator::IS_NOT_NULL => "\t\t\$criteria->addCondition('$part->field', null, \\Axpecto\\Storage\\Criteria\\Operator::{$part->operator->name}, \\Axpecto\\Storage\\Criteria\\LogicOperator::{$part->logicOperator->name});\n",
-			default => "\t\t\$criteria->addCondition('$part->field', \${$params->nextAndGet()}, \\Axpecto\\Storage\\Criteria\\Operator::{$part->operator->name}, \\Axpecto\\Storage\\Criteria\\LogicOperator::{$part->logicOperator->name});\n",
+			Operator::IS_NOT_NULL => "\t\t\$criteria->addCondition('{$part->field}', null, \\Axpecto\\Storage\\Criteria\\Operator::{$part->operator->name}, \\Axpecto\\Storage\\Criteria\\LogicOperator::{$part->logicOperator->name});\n",
+			default => "\t\t\$criteria->addCondition('{$part->field}', \${$params->nextAndGet()}, \\Axpecto\\Storage\\Criteria\\Operator::{$part->operator->name}, \\Axpecto\\Storage\\Criteria\\LogicOperator::{$part->logicOperator->name});\n",
 		};
 	}
 }

@@ -6,6 +6,7 @@ namespace Axpecto\Repository;
 
 use Attribute;
 use Axpecto\Annotation\Annotation;
+use Axpecto\Annotation\BuildAnnotation;
 use Axpecto\ClassBuilder\BuildHandler;
 use Axpecto\Container\Annotation\Inject;
 use Axpecto\Repository\Handler\RepositoryBuildHandler;
@@ -19,8 +20,8 @@ use Axpecto\Storage\Entity\Entity as EntityAttribute;
  *
  * @template T of EntityAttribute
  */
-#[Attribute( Attribute::TARGET_CLASS )]
-class Repository extends Annotation {
+#[Attribute]
+class Repository extends BuildAnnotation {
 	/**
 	 * The build handler instance responsible for processing the repository.
 	 *

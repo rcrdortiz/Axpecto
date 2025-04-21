@@ -1,146 +1,171 @@
 <?php
 
+declare( strict_types=1 );
+
 namespace Axpecto\Annotation;
 
 use Axpecto\Collection\Klist;
 use Axpecto\Container\Container;
 use Axpecto\Reflection\ReflectionUtils;
-use Exception;
+use ReflectionAttribute;
 use ReflectionException;
-use ReflectionMethod;
+use ReflectionParameter;
 
 /**
- * Class AnnotationReader
+ * Reads PHP8 attributes and turns them into AOP-style Annotation instances,
+ * filtering by class vs. method targets and injecting their properties via DI.
  *
- * This class is responsible for reading annotations on classes and methods, specifically
- * for use in an Aspect-Oriented Programming (AOP) context. It handles fetching annotations,
- * including build-related annotations, and supports dependency injection for these annotations.
- *
- * @template T
+ * @template A of Annotation
+ * @psalm-consistent-constructor
  */
 class AnnotationReader {
-
-	/**
-	 * Constructor for AnnotationReader.
-	 *
-	 * @param Container       $container The dependency injection container.
-	 * @param ReflectionUtils $reflect   Utility for handling reflection of classes and methods.
-	 */
 	public function __construct(
 		private readonly Container $container,
-		private readonly ReflectionUtils $reflect,
+		private readonly ReflectionUtils $reflection
 	) {
 	}
 
 	/**
-	 * Fetches annotations for a specific method.
+	 * Fetch all annotations of a given type on a class.
 	 *
-	 * @param class-string<T> $class           The fully qualified class name.
-	 * @param string          $method          The method name.
-	 * @param string          $annotationClass The annotation class to filter.
+	 * @template T
+	 * @param class-string<T> $class
+	 * @param class-string<A> $annotationClass
 	 *
-	 * @return Klist<Annotation> A list of annotations for the method.
-	 * @throws ReflectionException|Exception
-	 */
-	public function getMethodAnnotations( string $class, string $method, string $annotationClass = Annotation::class ): Klist {
-		return $this->mapAttributesToAnnotations(
-			attributes:      $this->reflect->getMethodAttributes( $class, $method ),
-			annotationClass: $annotationClass
-		);
-	}
-
-	/**
-	 * Fetches build-related annotations for a method.
-	 *
-	 * @param class-string<T> $class           The fully qualified class name.
-	 * @param string          $method          The method name.
-	 * @param string          $annotationClass The annotation class to filter.
-	 *
-	 * @return Klist<Annotation> A list of build annotations for the method.
+	 * @return Klist<T>
 	 * @throws ReflectionException
 	 */
-	public function getMethodExecutionAnnotations( string $class, string $method, string $annotationClass = Annotation::class ): Klist {
-		return $this->getMethodAnnotations( $class, $method, $annotationClass )
-		            ->filter( fn( Annotation $annotation ) => $annotation->isMethodExecutionAnnotation() )
-		            ->map( fn( Annotation $annotation ) => $annotation->setAnnotatedClass( $class )->setAnnotatedMethod( $method ) );
+	public function getClassAnnotations(
+		string $class,
+		string $annotationClass,
+	): Klist {
+		$raw = $this->reflection->getClassAttributes( $class );
+
+		return $this
+			->filterAndInject( $raw, $annotationClass )
+			->map( fn( Annotation $ann ): Annotation => $ann->setAnnotatedClass( $class ) );
 	}
 
 	/**
-	 * Fetches build-related annotations for a method.
+	 * Fetch all annotations of a given type on a method.
 	 *
-	 * @param class-string<T> $class           The fully qualified class name.
-	 * @param string          $method          The method name.
-	 * @param string          $annotationClass The annotation class to filter.
+	 * @template T
+	 * @param class-string<T> $class
+	 * @param string $method
+	 * @param class-string<A> $annotationClass
 	 *
-	 * @return Klist<Annotation> A list of build annotations for the method.
+	 * @return Klist<T>
 	 * @throws ReflectionException
 	 */
-	public function getMethodBuildAnnotations( string $class, string $method, string $annotationClass = Annotation::class ): Klist {
-		return $this->getMethodAnnotations( $class, $method, $annotationClass )
-		            ->filter( fn( Annotation $annotation ) => $annotation->isBuildAnnotation() )
-		            ->map( fn( Annotation $annotation ) => $annotation->setAnnotatedClass( $class )->setAnnotatedMethod( $method ) );
+	public function getMethodAnnotations(
+		string $class,
+		string $method,
+		string $annotationClass,
+	): Klist {
+		$raw = $this->reflection->getMethodAttributes( $class, $method );
+
+		return $this
+			->filterAndInject( $raw, $annotationClass )
+			->map( fn( Annotation $ann ): Annotation => $ann
+				->setAnnotatedClass( $class )
+				->setAnnotatedMethod( $method )
+			);
 	}
 
 	/**
-	 * Fetches all build-related annotations for a class, including its methods.
+	 * Fetch both class‑level and method‑level annotations of a given type.
 	 *
-	 * @param class-string<T> $class           The fully qualified class name.
-	 * @param string          $annotationClass The annotation class to filter.
+	 * @template T
+	 * @param class-string<T> $class
+	 * @param class-string<A> $annotationClass
 	 *
-	 * @return Klist<Annotation> A list of all build annotations for the class.
+	 * @return Klist<T>
 	 * @throws ReflectionException
 	 */
-	public function getAllBuildAnnotations( string $class, string $annotationClass = Annotation::class ): Klist {
-		return $this->reflect
-			->getAnnotatedMethods( $class )
-			->map( fn( ReflectionMethod $method ) => $this->getMethodBuildAnnotations( $class, $method->getName(), $annotationClass ) )
-			->flatten()
-			->merge( $this->getClassBuildAnnotations( $class, $annotationClass ) );
+	public function getAllAnnotations(
+		string $class,
+		string $annotationClass = Annotation::class
+	): Klist {
+		$classAnns  = $this->getClassAnnotations( $class, $annotationClass );
+		$methodAnns = $this->reflection
+			->getAnnotatedMethods( $class, $annotationClass )
+			->map( fn( \ReflectionMethod $m ) => $this->getMethodAnnotations( $class, $m->getName(), $annotationClass )
+			)
+			->flatten();
+
+		return $classAnns->merge( $methodAnns );
 	}
 
 	/**
-	 * Fetches annotations for a class.
+	 * Fetch all annotations of a given type on one of a method’s parameters.
 	 *
-	 * @param class-string<T> $class           The fully qualified class name.
-	 * @param string          $annotationClass The annotation class to filter.
+	 * @template T
+	 * @param class-string<T> $class
+	 * @param string $method
+	 * @param string $parameterName
+	 * @param class-string<A> $annotationClass
 	 *
-	 * @return Klist<Annotation> A list of annotations for the class.
-	 * @throws ReflectionException|Exception
+	 * @return Klist<A>
+	 * @throws ReflectionException
 	 */
-	public function getClassAnnotations( string $class, string $annotationClass = Annotation::class ): Klist {
-		return $this->mapAttributesToAnnotations(
-			attributes:      $this->reflect->getClassAttributes( $class ),
-			annotationClass: $annotationClass
-		);
+	public function getParameterAnnotations(
+		string $class,
+		string $method,
+		string $parameterName,
+		string $annotationClass,
+	): Klist {
+		$parameter = listFrom( $this->reflection->getClassMethod( $class, $method )->getParameters() )
+			->filter( fn( ReflectionParameter $p ) => $p->getName() === $parameterName )
+			->firstOrNull();
+
+		if ( ! $parameter ) {
+			return emptyList();
+		}
+
+		return listFrom( $parameter->getAttributes() )
+			->map( fn( ReflectionAttribute $p ) => $p->newInstance() )
+			->maybe( fn( Klist $attributes ) => $this->filterAndInject( $attributes, $annotationClass ) )
+			->foreach( fn( Annotation $ann ) => $ann->setAnnotatedClass( $class )->setAnnotatedMethod( $method ) );
 	}
 
 	/**
-	 * Fetches build-related annotations for a class.
+	 * Fetch a single annotation of a given type on a property.
 	 *
-	 * @param class-string<T> $class           The fully qualified class name.
-	 * @param string          $annotationClass The annotation class to filter.
+	 * @template T
+	 * @param class-string<T> $class
+	 * @param string $property
+	 * @param class-string<A> $annotationClass
 	 *
-	 * @return Klist<Annotation> A list of build annotations for the class.
-	 * @throws ReflectionException|Exception
+	 * @return A|null
+	 * @throws ReflectionException
 	 */
-	public function getClassBuildAnnotations( string $class, string $annotationClass = Annotation::class ): Klist {
-		return $this->getClassAnnotations( $class, $annotationClass )
-		            ->filter( fn( Annotation $annotation ) => $annotation->isBuildAnnotation() )
-		            ->map( fn( Annotation $annotation ) => $annotation->setAnnotatedClass( $class ) );
+	public function getPropertyAnnotation(
+		string $class,
+		string $property,
+		string $annotationClass = Annotation::class
+	): mixed {
+		$attributes = $this->reflection
+			->getReflectionClass( $class )
+			->getProperty( $property )
+			->getAttributes();
+
+		return listFrom( $attributes )
+			->map( fn( ReflectionAttribute $a ) => $a->newInstance() )
+			->maybe( fn( Klist $attributes ) => $this->filterAndInject( $attributes, $annotationClass ) )
+			->firstOrNull()
+			?->setAnnotatedClass( $class );
 	}
 
 	/**
-	 * Maps attributes to annotations and applies property injection.
+	 * @template T of Annotation
+	 * @param Klist<Annotation> $instances
+	 * @param class-string<T> $annotationClass
 	 *
-	 * @param Klist  $attributes      A list of attributes.
-	 * @param string $annotationClass The annotation class to filter.
-	 *
-	 * @return Klist A list of filtered and injected annotations.
-	 * @throws Exception
+	 * @return Klist<T>
 	 */
-	private function mapAttributesToAnnotations( Klist $attributes, string $annotationClass ): Klist {
-		return $attributes
-			->filter( fn( $annotation ) => $annotation instanceof $annotationClass )
-			->foreach( fn( $annotation ) => $this->container->applyPropertyInjection( $annotation ) );
+	private function filterAndInject( Klist $instances, string $annotationClass ): Klist {
+		return $instances
+			->filter( fn( $i ) => is_a( $i, $annotationClass, true ) )
+			->foreach( fn( Annotation $ann ) => $this->container->applyPropertyInjection( $ann ) );
 	}
 }

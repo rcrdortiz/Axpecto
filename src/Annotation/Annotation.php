@@ -3,36 +3,21 @@
 namespace Axpecto\Annotation;
 
 use Attribute;
-use Axpecto\ClassBuilder\BuildHandler;
-use Axpecto\MethodExecution\MethodExecutionHandler;
 
 /**
  * Class Annotation
  *
- * Represents an abstract base class for annotations in an Aspect-Oriented Programming (AOP) system.
+ * Represents a base class for annotations in an Aspect-Oriented Programming (AOP) system.
  * Annotations can have associated handler classes that define how they are processed during
  * method execution or build phases. This class provides mechanisms to retrieve those handlers and
  * associate annotations with specific classes and methods.
  *
  * @package Axpecto\Aop
+ *
+ * @TODO Refactor this and possibly create a hierarchy of annotations with Annotation -> BuildAnnotation -> MethodExecutionAnnotation.
  */
 #[Attribute]
 class Annotation {
-
-	/**
-	 * The handler for processing the method execution annotation.
-	 *
-	 * @var MethodExecutionHandler|null
-	 */
-	protected ?MethodExecutionHandler $methodExecutionHandler = null;
-
-	/**
-	 * The builder for the annotation, used during the build phase.
-	 *
-	 * @var BuildHandler|null
-	 */
-	protected ?BuildHandler $builder = null;
-
 	/**
 	 * The class associated with the annotation.
 	 *
@@ -46,42 +31,6 @@ class Annotation {
 	 * @var string|null
 	 */
 	protected ?string $annotatedMethod = null;
-
-	/**
-	 * Gets the BuildHandler for this annotation, if available.
-	 *
-	 * @return BuildHandler|null The builder for the annotation, or null if not set.
-	 */
-	public function getBuilder(): ?BuildHandler {
-		return $this->builder;
-	}
-
-	/**
-	 * Checks if this annotation is meant for the build phase.
-	 *
-	 * @return bool True if the annotation is used for building, false otherwise.
-	 */
-	public function isBuildAnnotation(): bool {
-		return $this->builder instanceof BuildHandler;
-	}
-
-	/**
-	 * Gets the MethodExecutionHandler for this annotation, if available.
-	 *
-	 * @return MethodExecutionHandler|null The handler for method execution, or null if not set.
-	 */
-	public function getMethodExecutionHandler(): ?MethodExecutionHandler {
-		return $this->methodExecutionHandler;
-	}
-
-	/**
-	 * Checks if this annotation is meant for method execution interception.
-	 *
-	 * @return bool True if it is a method execution annotation, false otherwise.
-	 */
-	public function isMethodExecutionAnnotation(): bool {
-		return $this->methodExecutionHandler instanceof MethodExecutionHandler;
-	}
 
 	/**
 	 * Sets the class name that this annotation is associated with.

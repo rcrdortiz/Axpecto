@@ -1,90 +1,164 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Axpecto\Annotation;
 
+use Axpecto\Collection\Klist;
 use Axpecto\Container\Container;
 use Axpecto\Reflection\ReflectionUtils;
 use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
+use stdClass;
 
-class AnnotationReaderTest extends TestCase {
-	private ReflectionUtils $reflectionUtils;
-	private AnnotationReader $annotationReader;
-	private Container $container;
+class AnnotationReaderTest extends TestCase
+{
+	private ReflectionUtils $reflect;
+	private Container       $container;
+	private AnnotationReader $reader;
 
-	public static function methodDataProvider(): array {
-		$a = new class extends Annotation {};
-		$b = new class extends Annotation {};
-		$c = new class extends Annotation {};
-		return [
-			'Empty list of annotations returns an empty list' => [
-				'annotationClass' => Annotation::class,
-				'list' => listOf(),
-				'expected' => listOf(),
-				'injectionCount' => 0,
-			],
-			'Annotations are filtered when they are not of the expected type' => [
-				'annotationClass' => $c::class,
-				'list' => listOf( $a, $a, $a, $b, $b, $c, $b ),
-				'expected' => listOf( $c ),
-				'injectionCount' => 1,
-			],
-			'Annotation are not filtered if they are of the expected type' => [
-				'annotationClass' => $a::class,
-				'list' => listOf( $a, $a, $a ),
-				'expected' => listOf( $a, $a, $a ),
-				'injectionCount' => 3,
-			],
-		];
+	protected function setUp(): void
+	{
+		$this->reflect   = $this->createMock(ReflectionUtils::class);
+		$this->container = $this->createMock(Container::class);
+		$this->reader    = new AnnotationReader($this->container, $this->reflect);
 	}
 
-	protected function setUp(): void {
-		// Mock the Container and ReflectionUtils dependencies
-		$this->container       = $this->createMock( Container::class );
-		$this->reflectionUtils = $this->createMock( ReflectionUtils::class );
+	public function testGetClassAnnotationsFiltersByTypeAndInjects(): void
+	{
+		$class = stdClass::class;
+		$good  = $this->createMock(DummyAnnotation::class);
+		$bad   = $this->createMock(OtherAnnotation::class);
 
-		// Initialize AnnotationReader with mocked dependencies
-		$this->annotationReader = new AnnotationReader( $this->container, $this->reflectionUtils );
+		// reflect returns both
+		$this->reflect
+			->method('getClassAttributes')
+			->with($class)
+			->willReturn(listOf($good, $bad));
+
+		// container should inject only the good one
+		$this->container
+			->expects($this->once())
+			->method('applyPropertyInjection')
+			->with($good);
+
+		// stub setAnnotatedClass
+		$good
+			->expects($this->once())
+			->method('setAnnotatedClass')
+			->with($class)
+			->willReturn($good);
+
+		$out = $this->reader->getClassAnnotations($class, DummyAnnotation::class);
+
+		$this->assertInstanceOf(Klist::class, $out);
+		$this->assertCount(1, $out);
+		$this->assertSame($good, $out->firstOrNull());
 	}
 
-	/**
-	 * @dataProvider methodDataProvider
-	 */
-	public function testGetMethodAnnotations( $annotationClass, $list, $expected, $injectionCount ): void {
-		// Mock the getMethodAttributes call to return the mock attributes
-		$this->reflectionUtils
-			->expects( $this->once() )
-			->method( 'getMethodAttributes' )
-			->willReturn( $list );
+	public function testGetMethodAnnotationsAddsClassAndMethod(): void
+	{
+		$class   = stdClass::class;
+		$method  = 'foo';
+		$ann     = $this->createMock(DummyAnnotation::class);
+
+		$this->reflect
+			->method('getMethodAttributes')
+			->with($class, $method)
+			->willReturn(listOf($ann));
 
 		$this->container
-			->expects( $this->exactly( $injectionCount ) )
-			->method( 'applyPropertyInjection' );
+			->expects($this->once())
+			->method('applyPropertyInjection')
+			->with($ann);
 
-		// Call the method
-		$actual = $this->annotationReader->getMethodAnnotations( 'AnyClass', 'AnyMethod', $annotationClass );
+		$ann
+			->expects($this->once())
+			->method('setAnnotatedClass')
+			->with($class)
+			->willReturnSelf();
+		$ann
+			->expects($this->once())
+			->method('setAnnotatedMethod')
+			->with($method)
+			->willReturnSelf();
 
-		// Assert the filtered list of annotations is returned
-		$this->assertEquals( $expected, $actual );
+		$out = $this->reader->getMethodAnnotations($class, $method, DummyAnnotation::class);
+
+		$this->assertCount(1, $out);
+		$this->assertSame($ann, $out->firstOrNull());
 	}
 
-	/**
-	 * @dataProvider methodDataProvider
-	 */
-	public function testGetClassAnnotations( $annotationClass, $list, $expected, $injectionCount ): void {
-		// Mock the getMethodAttributes call to return the mock attributes
-		$this->reflectionUtils
-			->expects( $this->once() )
-			->method( 'getClassAttributes' )
-			->willReturn( $list );
+	public function testGetAllAnnotationsMergesClassAndMethods(): void
+	{
+		$class = stdClass::class;
 
+		// class ann
+		$c1 = $this->createMock(DummyAnnotation::class);
+		$this->reflect
+			->method('getClassAttributes')
+			->with($class)
+			->willReturn(listOf($c1));
+
+		$c1
+			->method('setAnnotatedClass')
+			->willReturnSelf();
 		$this->container
-			->expects( $this->exactly( $injectionCount ) )
-			->method( 'applyPropertyInjection' );
+			->method('applyPropertyInjection')
+			->willReturnCallback(fn($a) => $a);
 
-		// Call the method
-		$actual = $this->annotationReader->getClassAnnotations( 'AnyClass', $annotationClass );
+		// method list
+		$m1 = $this->createMock(DummyAnnotation::class);
+		$method = new ReflectionMethod(TestSubject::class, 'bar');
 
-		// Assert the filtered list of annotations is returned
-		$this->assertEquals( $expected, $actual );
+		$this->reflect
+			->method('getAnnotatedMethods')
+			->with($class, DummyAnnotation::class)
+			->willReturn(listOf($method));
+
+		// when reading that method
+		$this->reflect
+			->method('getMethodAttributes')
+			->with($class, 'bar')
+			->willReturn(listOf($m1));
+
+		$m1
+			->method('setAnnotatedClass')
+			->with($class)
+			->willReturnSelf();
+		$m1
+			->method('setAnnotatedMethod')
+			->with('bar')
+			->willReturnSelf();
+
+		$out = $this->reader->getAllAnnotations($class, DummyAnnotation::class);
+
+		// should contain both c1 and m1
+		$this->assertCount(2, $out);
+		$this->assertEqualsCanonicalizing([$c1, $m1], $out->toArray());
 	}
+}
+
+
+/**
+ * Dummy attribute class for testing.
+ */
+#[\Attribute(\Attribute::TARGET_ALL)]
+class DummyAnnotation extends Annotation
+{
+	public function __construct() {}
+}
+
+/** Another annotation, should be filtered out. */
+#[\Attribute(\Attribute::TARGET_ALL)]
+class OtherAnnotation extends Annotation
+{
+	public function __construct() {}
+}
+
+/** A dummy class with one method for testGetAllAnnotations. */
+class TestSubject
+{
+	#[DummyAnnotation]
+	public function bar(): void {}
 }

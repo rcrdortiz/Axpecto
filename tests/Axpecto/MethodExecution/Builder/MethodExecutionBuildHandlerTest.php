@@ -3,70 +3,85 @@
 namespace Axpecto\MethodExecution\Builder;
 
 use Axpecto\Annotation\Annotation;
-use Axpecto\ClassBuilder\BuildContext;
-use Axpecto\Reflection\ReflectionUtils;
+use Axpecto\ClassBuilder\BuildOutput;
+use Axpecto\Code\MethodCodeGenerator;
+use PHPUnit\Framework\MockObject\Exception;
 use PHPUnit\Framework\TestCase;
+use ReflectionException;
 
 /**
  * Unit test for the MethodExecutionBuildHandler class.
  */
 class MethodExecutionBuildHandlerTest extends TestCase {
-	private ReflectionUtils $reflectionUtilsMock;
-	private BuildContext $buildContextMock;
-	private Annotation $annotationMock;
-	private MethodExecutionBuildHandler $methodExecutionBuildHandler;
+	private MethodCodeGenerator $codeGen;
+	private MethodExecutionBuildHandler $handler;
 
+	/**
+	 * @throws Exception
+	 */
 	protected function setUp(): void {
-		// Create mock objects for dependencies
-		$this->reflectionUtilsMock = $this->createMock( ReflectionUtils::class );
-		$this->buildContextMock    = $this->createMock( BuildContext::class );
-		$this->annotationMock      = $this->createMock( Annotation::class );
-
-		// Instantiate MethodExecutionBuildHandler with mocked dependencies
-		$this->methodExecutionBuildHandler = new MethodExecutionBuildHandler( $this->reflectionUtilsMock );
+		// mock the code generator
+		$this->codeGen = $this->createMock( MethodCodeGenerator::class );
+		$this->handler = new MethodExecutionBuildHandler( $this->codeGen );
 	}
 
-	public function testInterceptAddsMethodToContext(): void {
-		$class          = 'TestClass';
-		$method         = 'testMethod';
-		$signature      = 'public function testMethod()';
-		$implementation = "return \$this->proxy->handle('TestClass', 'testMethod', parent::testMethod(...), func_get_args());";
+	/**
+	 * @throws ReflectionException
+	 * @throws Exception
+	 */
+	public function testInterceptAddsProxyPropertyAndMethod(): void {
+		// Dummy target class + method
+		$className  = DummyClass::class;
+		$methodName = 'sayHello';
 
-		// Set up the annotation to return the class and method
-		$this->annotationMock->method( 'getAnnotatedClass' )->willReturn( $class );
-		$this->annotationMock->method( 'getAnnotatedMethod' )->willReturn( $method );
+		// 1) Prepare a fake annotation
+		$annotation = $this->createMock( Annotation::class );
+		$annotation
+			->method( 'getAnnotatedClass' )
+			->willReturn( $className );
+		$annotation
+			->method( 'getAnnotatedMethod' )
+			->willReturn( $methodName );
 
-		// Mock the reflection utility to return the method signature and implementation
-		$this->reflectionUtilsMock->method( 'getMethodDefinitionString' )->with( $class, $method )->willReturn( $signature );
-		$this->reflectionUtilsMock->method( 'getReturnType' )->with( $class, $method )->willReturn( 'string' ); // Non-void return type
+		// 2) Stub the code generator to return a known signature
+		$this->codeGen
+			->expects( $this->once() )
+			->method( 'implementMethodSignature' )
+			->with( $className, $methodName )
+			->willReturn( 'public function sayHello(string $who)' );
 
-		// Expect the method and property to be added to the context
-		$this->buildContextMock->expects( $this->once() )->method( 'addMethod' )->with( $method, $signature, $implementation );
-		$this->buildContextMock->expects( $this->once() )->method( 'injectProperty' )->with( 'proxy', MethodExecutionProxy::class );
+		// 3) Create a fresh BuildContext for our DummyClass
+		$context = new BuildOutput( $className );
 
-		// Execute the intercept method
-		$this->methodExecutionBuildHandler->intercept( $this->annotationMock, $this->buildContextMock );
+		// 4) Invoke the handler
+		$this->handler->intercept( $annotation, $context );
+
+		// 5a) Assert the proxy property was injected
+		$this->assertTrue(
+			$context->properties->offsetExists( MethodExecutionProxy::class ),
+			'Expected a "proxy" property in BuildContext::properties'
+		);
+
+		// 5b) Assert the method was added
+		$this->assertTrue(
+			$context->methods->offsetExists( $methodName ),
+			"Expected method \"$methodName\" in BuildContext::methods"
+		);
+
+		// 5c) Inspect the generated code for the correct handle(...) call
+		$methodCode = $context->methods->toArray()[ $methodName ];
+		$this->assertStringContainsString(
+			"return \$this->proxy->handle('$className', '$methodName', parent::$methodName(...), func_get_args())",
+			$methodCode
+		);
 	}
+}
 
-	public function testInterceptHandlesVoidMethods(): void {
-		$class          = 'TestClass';
-		$method         = 'voidMethod';
-		$signature      = 'public function voidMethod()';
-		$implementation = "\$this->proxy->handle('TestClass', 'voidMethod', parent::voidMethod(...), func_get_args());";
-
-		// Set up the annotation to return the class and method
-		$this->annotationMock->method( 'getAnnotatedClass' )->willReturn( $class );
-		$this->annotationMock->method( 'getAnnotatedMethod' )->willReturn( $method );
-
-		// Mock the reflection utility to return the method signature and void return type
-		$this->reflectionUtilsMock->method( 'getMethodDefinitionString' )->with( $class, $method )->willReturn( $signature );
-		$this->reflectionUtilsMock->method( 'getReturnType' )->with( $class, $method )->willReturn( 'void' ); // Void return type
-
-		// Expect the method and property to be added to the context
-		$this->buildContextMock->expects( $this->once() )->method( 'addMethod' )->with( $method, $signature, $implementation );
-		$this->buildContextMock->expects( $this->once() )->method( 'injectProperty' )->with( 'proxy', MethodExecutionProxy::class );
-
-		// Execute the intercept method
-		$this->methodExecutionBuildHandler->intercept( $this->annotationMock, $this->buildContextMock );
+/**
+ * Dummy class used in the test.
+ */
+class DummyClass {
+	public function sayHello( string $who ): string {
+		return "Hello, $who";
 	}
 }
