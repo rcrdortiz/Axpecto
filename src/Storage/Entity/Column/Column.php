@@ -3,13 +3,14 @@
 namespace Axpecto\Storage\Entity\Column;
 
 use Attribute;
+use Axpecto\Annotation\Annotation;
 use Axpecto\Storage\Entity\EntityField;
 
 /**
  * @psalm-suppress UnusedProperty
  */
 #[Attribute( Attribute::TARGET_PARAMETER )]
-class Column {
+class Column extends Annotation {
 	const CURRENT_TIMESTAMP = 'CURRENT_TIMESTAMP';
 
 	public function __construct(

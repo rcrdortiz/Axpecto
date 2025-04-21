@@ -1,7 +1,8 @@
 {
   "name": "rcrdortiz/axpecto",
-  "description": "PHP meta framework for building modern, AI oriented, aspect orientated development frameworks.",
+  "description": "PHP meta‑framework for modern, AI‑augmented, aspect‑oriented development.",
   "type": "library",
+  "license": "MIT",
   "version": "1.0.2",
   "require": {
     "php": ">=8.3",
@@ -20,7 +21,6 @@
       "src/functions.php"
     ]
   },
-  "license": "GNU",
   "authors": [
     {
       "name": "Richard Ortiz",

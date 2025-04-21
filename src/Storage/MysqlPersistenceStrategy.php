@@ -2,10 +2,9 @@
 
 namespace Axpecto\Storage;
 
+use Axpecto\Annotation\AnnotationReader;
 use Axpecto\Collection\Klist;
-use Axpecto\Reflection\ReflectionUtils;
 use Axpecto\Storage\Connection\Connection;
-use Axpecto\Storage\Criteria\Condition;
 use Axpecto\Storage\Criteria\Criteria;
 use Axpecto\Storage\Criteria\CriteriaPersistenceStrategy;
 use Axpecto\Storage\Criteria\Operator;
@@ -20,7 +19,7 @@ class MysqlPersistenceStrategy implements CriteriaPersistenceStrategy {
 
 	public function __construct(
 		private readonly Connection $conn,
-		private readonly ReflectionUtils $reflect
+		private readonly AnnotationReader $annotationReader,
 	) {
 	}
 
@@ -35,7 +34,7 @@ class MysqlPersistenceStrategy implements CriteriaPersistenceStrategy {
 	 * @throws Exception
 	 */
 	private function getEntityMetadata( string $entityClass ): EntityAttribute {
-		$entityAnnotation = $this->reflect
+		$entityAnnotation = $this->annotationReader
 			->getClassAnnotations( $entityClass, EntityAttribute::class )
 			->firstOrNull();
 		if ( ! $entityAnnotation ) {
@@ -57,6 +56,8 @@ class MysqlPersistenceStrategy implements CriteriaPersistenceStrategy {
 	 *
 	 * @return bool True on success, false on failure.
 	 * @throws Exception
+	 *
+	 * @TODO Refactor this method to use the id field from the column metadata instead of the Entity.
 	 */
 	#[Override]
 	public function save( object $entity ): bool {
@@ -102,7 +103,7 @@ class MysqlPersistenceStrategy implements CriteriaPersistenceStrategy {
 	 * @TODO Refactor this whole method. Implement Klist reduce.
 	 *
 	 * @param Criteria $criteria
-	 * @param string   $entityClass Fully qualified entity class name.
+	 * @param string $entityClass Fully qualified entity class name.
 	 *
 	 * @return Klist
 	 * @throws Exception
@@ -186,7 +187,7 @@ class MysqlPersistenceStrategy implements CriteriaPersistenceStrategy {
 	 * @psalm-suppress PossiblyUnusedMethod Class used by generated Repository implementations.
 	 *
 	 * @template T
-	 * @param Criteria        $criteria
+	 * @param Criteria $criteria
 	 * @param class-string<T> $entityClass Fully qualified entity class name.
 	 *
 	 * @return T|null Returns an instance of T or null if not found.
@@ -204,7 +205,7 @@ class MysqlPersistenceStrategy implements CriteriaPersistenceStrategy {
 	 *
 	 * @psalm-suppress PossiblyUnusedMethod Class used by generated Repository implementations.
 	 *
-	 * @param int    $id
+	 * @param int $id
 	 * @param string $entityClass Fully qualified entity class name.
 	 *
 	 * @return bool

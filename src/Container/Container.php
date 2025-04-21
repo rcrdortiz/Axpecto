@@ -41,13 +41,20 @@ class Container {
 	private ReflectionUtils $reflect;
 
 	/**
+	 * Reads annotations and injects dependencies.
+	 *
+	 * @var AnnotationReader The annotation reader instance.
+	 */
+	private AnnotationReader $annotationReader;
+
+	/**
 	 * Container constructor.
 	 *
 	 * @psalm-suppress PossiblyUnusedMethod
 	 *
-	 * @param array $values     Stores constant values (like configs).
-	 * @param array $bindings   Maps interfaces or abstract classes to concrete implementations.
-	 * @param array $instances  Stores class instances (usually singletons).
+	 * @param array $values Stores constant values (like configs).
+	 * @param array $bindings Maps interfaces or abstract classes to concrete implementations.
+	 * @param array $instances Stores class instances (usually singletons).
 	 * @param array $autoWiring Tracks classes currently being autowired to prevent circular references.
 	 */
 	public function __construct(
@@ -59,15 +66,15 @@ class Container {
 		$this->reflect                             = new ReflectionUtils();
 		$this->instances[ ReflectionUtils::class ] = $this->reflect;
 
-		$annotationReader                           = new AnnotationReader(
+		$this->annotationReader                     = new AnnotationReader(
 			container: $this,
-			reflect:   $this->reflect,
+			reflection: $this->reflect,
 		);
-		$this->instances[ AnnotationReader::class ] = $annotationReader;
+		$this->instances[ AnnotationReader::class ] = $this->annotationReader;
 
 		$this->classBuilder                     = new ClassBuilder(
 			reflect: $this->reflect,
-			reader:  $annotationReader,
+			reader: $this->annotationReader,
 		);
 		$this->instances[ ClassBuilder::class ] = $this->classBuilder;
 		$this->instances[ self::class ]         = $this;
@@ -76,7 +83,7 @@ class Container {
 	/**
 	 * Adds a class instance to the container.
 	 *
-	 * @param string $class    The class name.
+	 * @param string $class The class name.
 	 * @param object $instance The instance of the class.
 	 */
 	public function addClassInstance( string $class, object $instance ): void {
@@ -88,8 +95,8 @@ class Container {
 	 *
 	 * @psalm-suppress PossiblyUnusedMethod
 	 *
-	 * @param string $name  The name of the value.
-	 * @param mixed  $value The value to add.
+	 * @param string $name The name of the value.
+	 * @param mixed $value The value to add.
 	 */
 	public function addValue( string $name, mixed $value ): void {
 		$this->values[ $this->getValueKey( $name ) ] = $value;
@@ -99,7 +106,7 @@ class Container {
 	 * Binds an interface or class to a specific implementation.
 	 *
 	 * @param string $classOrInterface The class or interface name.
-	 * @param string $class            The class name to bind.
+	 * @param string $class The class name to bind.
 	 */
 	public function bind( string $classOrInterface, string $class ): void {
 		$this->bindings[ $classOrInterface ] = $class;
@@ -158,13 +165,13 @@ class Container {
 
 		foreach ( $propertiesToInject as $property ) {
 			/** @var Inject $annotation */
-			$annotation = $this->reflect->getPropertyAnnotated( $instance::class, $property->name, with: Inject::class );
+			$annotation = $this->annotationReader->getPropertyAnnotation( $instance::class, $property->name, Inject::class );
 
 			if ( ! empty( $annotation->args ) ) {
 				$type = $property->type;
 
 				if ( ! is_string( $type ) || ! class_exists( $type ) ) {
-					throw new RuntimeException("Cannot instantiate property {$property->name}: missing or invalid type.");
+					throw new RuntimeException( "Cannot instantiate property {$property->name}: missing or invalid type." );
 				}
 
 				$value = new $type( ...$annotation->args );

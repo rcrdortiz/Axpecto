@@ -21,7 +21,7 @@ use Exception;
  *
  * @package Axpecto\Aop\Build
  */
-class BuildContext {
+class BuildOutput {
 
 	/**
 	 * Constructor for the BuildOutput class.
@@ -68,6 +68,8 @@ class BuildContext {
 
 	/**
 	 * Inject a property into the output.
+	 *
+	 * @psalm-suppress PossiblyUnusedReturnValue
 	 *
 	 * @param string $name
 	 * @param string $class

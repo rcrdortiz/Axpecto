@@ -3,7 +3,9 @@
 namespace Axpecto\MethodExecution;
 
 use Axpecto\Annotation\Annotation;
+use Axpecto\Annotation\MethodExecutionAnnotation;
 use Axpecto\Collection\Klist;
+use PHPUnit\Framework\MockObject\Exception;
 use PHPUnit\Framework\TestCase;
 
 class MethodExecutionContextTest extends TestCase {
@@ -31,6 +33,9 @@ class MethodExecutionContextTest extends TestCase {
 		$this->assertEquals( 3, $result );
 	}
 
+	/**
+	 * @throws Exception
+	 */
 	public function testProceedWithAnnotationsInterception() {
 		// Mock a method call that shouldn't be executed because of interception
 		$methodCall = function () {
@@ -46,8 +51,10 @@ class MethodExecutionContextTest extends TestCase {
 		            ->willReturn( 'interceptedResult' );
 
 		// Create a mock annotation with the handler
-		$annotationMock = $this->createMock( Annotation::class );
-		$annotationMock->method( 'getMethodExecutionHandler' )->willReturn( $handlerMock );
+		$annotationMock = $this->createMock( MethodExecutionAnnotation::class );
+		$annotationMock->expects( $this->once() )
+			->method( 'getMethodExecutionHandler' )
+			->willReturn( $handlerMock );
 
 		// Create a Klist with one annotation
 		$queue = new Klist( [ $annotationMock ] );
@@ -99,7 +106,7 @@ class MethodExecutionContextTest extends TestCase {
 		};
 
 		// Create an annotation without a handler
-		$annotationMock = $this->createMock( Annotation::class );
+		$annotationMock = $this->createMock( MethodExecutionAnnotation::class );
 		$annotationMock->method( 'getMethodExecutionHandler' )->willReturn( null );
 
 		// Create a Klist with the mock annotation
