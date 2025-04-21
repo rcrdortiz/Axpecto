@@ -81,7 +81,7 @@ class EntityMetadataService {
 			isPrimary: $column?->isPrimary ?? false,
 			isUnique: $column?->isUnique ?? false,
 			isIndexed: $column?->isIndexed ?? false,
-			onUpdate: $column?->onUpdate ?? false,
+			onUpdate: $column?->onUpdate ?? null,
 		);
 	}
 }

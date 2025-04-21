@@ -15,11 +15,11 @@ use Override;
 /**
  * @psalm-suppress UnusedClass This class is used by the build system or clients.
  */
-readonly class MysqlPersistenceStrategy implements CriteriaPersistenceStrategy {
+class MysqlPersistenceStrategy implements CriteriaPersistenceStrategy {
 
 	public function __construct(
-		private Connection $conn,
-		private AnnotationReader $annotationReader,
+		private readonly Connection $conn,
+		private readonly AnnotationReader $annotationReader,
 	) {
 	}
 
@@ -56,6 +56,8 @@ readonly class MysqlPersistenceStrategy implements CriteriaPersistenceStrategy {
 	 *
 	 * @return bool True on success, false on failure.
 	 * @throws Exception
+	 *
+	 * @TODO Refactor this method to use the id field from the column metadata instead of the Entity.
 	 */
 	#[Override]
 	public function save( object $entity ): bool {

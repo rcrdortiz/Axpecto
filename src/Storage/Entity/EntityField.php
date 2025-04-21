@@ -19,7 +19,7 @@ class EntityField {
 		public readonly bool $isPrimary = false,
 		public readonly bool $isUnique = false,
 		public readonly bool $isIndexed = false,
-		public readonly bool $onUpdate = false,
+		public readonly ?string $onUpdate = null,
 	) {
 	}
 }
