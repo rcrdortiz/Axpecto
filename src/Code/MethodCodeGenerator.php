@@ -39,10 +39,6 @@ class MethodCodeGenerator {
 	public function implementMethodSignature( string $class, string $method ): string {
 		$rMethod = $this->reflectionUtils->getClassMethod( $class, $method );
 
-		if ( $rMethod->isPrivate() || ! $rMethod->isAbstract() ) {
-			throw new Exception( "Can't implement non-abstract or private method $class::{$method}()" );
-		}
-
 		$visibility = $rMethod->isPublic() ? 'public' : 'protected';
 
 		$arguments = listFrom( $rMethod->getParameters() )

@@ -178,7 +178,7 @@ readonly class RepositoryBuildHandler implements BuildHandler {
 		$code .= "\t\treturn \$this->" . self::STORAGE_PROP .
 		         "->findAllByCriteria(\$criteria, '$entityClass')\n";
 		$code .= "\t\t    ->map(fn(\$item) => \$this->" .
-		         self::MAPPER_PROP . "->map('$entityClass', \$item));";
+		         self::MAPPER_PROP . "->mapEntityFromArray('$entityClass', \$item));";
 
 		return $code;
 	}

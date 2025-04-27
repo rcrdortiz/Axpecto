@@ -17,7 +17,7 @@ class Klist implements CollectionInterface {
 
 	/**
 	 * @param array<int, TValue> $array
-	 * @param bool               $mutable
+	 * @param bool $mutable
 	 */
 	public function __construct( array $array = [], private readonly bool $mutable = false ) {
 		$this->internalMap = new Kmap( $array, $this->mutable );
@@ -116,7 +116,7 @@ class Klist implements CollectionInterface {
 	}
 
 	#[Override]
-	public function join( string $separator ): string {
+	public function join( string $separator = '' ): string {
 		return $this->internalMap->join( $separator );
 	}
 

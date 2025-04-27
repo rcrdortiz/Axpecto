@@ -2,6 +2,8 @@
 
 namespace Axpecto\ClassBuilder;
 
+use Axpecto\Annotation\Annotation;
+use Axpecto\Collection\Klist;
 use Axpecto\Collection\Kmap;
 use Axpecto\Container\Annotation\Inject;
 use Exception;
@@ -26,6 +28,7 @@ class BuildOutput {
 	/**
 	 * Constructor for the BuildOutput class.
 	 **
+	 *
 	 * @param Kmap $methods List of methods in the output.
 	 * @param Kmap $properties List of class properties in the output.
 	 */
@@ -34,6 +37,8 @@ class BuildOutput {
 		public readonly Kmap $methods = new Kmap( mutable: true ),
 		public readonly Kmap $properties = new Kmap( mutable: true ),
 		public readonly Kmap $traits = new Kmap( mutable: true ),
+		// @TODO I might change this.
+		private array $methodAnnotations = [],
 	) {
 	}
 
@@ -50,6 +55,21 @@ class BuildOutput {
 	 */
 	public function addMethod( string $name, string $signature, string $implementation ): void {
 		$this->methods->add( $name, "$signature {\n\t\t$implementation\n\t}\n" );
+	}
+
+	/**
+	 * @template T of Annotation
+	 * @param string $methodName
+	 * @param class-string<T> $annotation
+	 *
+	 * @throws Exception
+	 */
+	public function annotateMethod( string $methodName, string $annotation ): void {
+		$this->methodAnnotations[$methodName][] = '#[' . $annotation . ']';
+	}
+
+	public function getMethodAnnotations( string $methodName ): Klist {
+		return listFrom( $this->methodAnnotations[$methodName] ?? [] );
 	}
 
 	/**
@@ -80,7 +100,7 @@ class BuildOutput {
 	public function injectProperty( string $name, string $class ): string {
 		$this->addProperty(
 			name: $class,
-			implementation: "#[" . Inject::class . "] private $class \$$name;",
+			implementation: "#[" . Inject::class . "] protected $class \$$name;",
 		);
 
 		return $name;
