@@ -2,8 +2,7 @@
 
 namespace Axpecto\MethodExecution\Builder;
 
-use Axpecto\Annotation\Annotation;
-use Axpecto\Annotation\AnnotationReader;
+use Axpecto\Annotation\AnnotationService;
 use Axpecto\Annotation\MethodExecutionAnnotation;
 use Axpecto\MethodExecution\MethodExecutionContext;
 use Axpecto\Reflection\ReflectionUtils;
@@ -23,11 +22,11 @@ class MethodExecutionProxy {
 	 * @psalm-suppress PossiblyUnusedMethod
 	 *
 	 * @param ReflectionUtils $reflect The reflection utility instance for handling class/method reflection.
-	 * @param AnnotationReader $reader Reads annotations for the given class and method.
+	 * @param AnnotationService $annotationService Reads annotations for the given class and method.
 	 */
 	public function __construct(
 		private readonly ReflectionUtils $reflect,
-		private readonly AnnotationReader $reader,
+		private readonly AnnotationService $annotationService,
 	) {
 	}
 
@@ -54,7 +53,7 @@ class MethodExecutionProxy {
 		array $arguments,
 	): mixed {
 		// Get method annotations
-		$annotations = $this->reader->getMethodAnnotations( $class, $method, MethodExecutionAnnotation::class );
+		$annotations = $this->annotationService->getMethodAnnotations( $class, $method, MethodExecutionAnnotation::class );
 
 		// Resolve method arguments using reflection
 		$mappedArguments = $this->reflect->mapValuesToArguments( $class, $method, $arguments );

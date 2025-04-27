@@ -1,6 +1,14 @@
 {
   "name": "rcrdortiz/axpecto",
   "description": "PHP meta‑framework for modern, AI‑augmented, aspect‑oriented development.",
+  "keywords": [
+    "php",
+    "aop",
+    "dependency-injection",
+    "collections",
+    "meta-framework",
+    "ai"
+  ],
   "type": "library",
   "version": "1.0.4",
   "license": "MIT",

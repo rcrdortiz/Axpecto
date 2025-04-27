@@ -14,13 +14,13 @@ use Axpecto\Annotation\Annotation;
 #[Attribute( Attribute::TARGET_PROPERTY )]
 class Inject extends Annotation {
 	/**
+	 * @template T
 	 * Constructor for the Inject annotation.
 	 *
-	 * @param array $args Arguments to be injected into the property.
+	 * @param class-string<T>|null $class
 	 */
 	public function __construct(
 		public readonly ?string $class = null,
-		public readonly array $args = [],
 	) {
 	}
 }

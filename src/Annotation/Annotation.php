@@ -14,7 +14,6 @@ use Attribute;
  *
  * @package Axpecto\Aop
  *
- * @TODO Refactor this and possibly create a hierarchy of annotations with Annotation -> BuildAnnotation -> MethodExecutionAnnotation.
  */
 #[Attribute]
 class Annotation {

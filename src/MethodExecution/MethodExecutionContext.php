@@ -36,13 +36,12 @@ class MethodExecutionContext {
 	}
 
 	/**
-	 * Get the current annotation being processed.
-	 *
-	 * @psalm-suppress PossiblyUnusedMethod
-	 *
-	 * @return Annotation|null
+	 * @template T of Annotation
+	 * @psalm-param class-string<T>|null $_class the FQCN of the annotation you want
+	 * @psalm-return T|null                    the current annotation, or null if none/mismatched
 	 */
-	public function getAnnotation(): ?Annotation {
+	public function getAnnotation( ?string $_class = null ): ?Annotation {
+		/** @var T|null */
 		return $this->currentAnnotation;
 	}
 
