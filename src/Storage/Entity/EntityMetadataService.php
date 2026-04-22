@@ -2,7 +2,7 @@
 
 namespace Axpecto\Storage\Entity;
 
-use Axpecto\Annotation\AnnotationReader;
+use Axpecto\Annotation\AnnotationService;
 use Axpecto\Collection\Klist;
 use Axpecto\Reflection\Dto\Argument;
 use Axpecto\Reflection\ReflectionUtils;
@@ -18,11 +18,11 @@ class EntityMetadataService {
 	 * @psalm-suppress PossiblyUnusedMethod
 	 *
 	 * @param ReflectionUtils $reflectionUtils
-	 * @param AnnotationReader $annotationReader
+	 * @param AnnotationService $annotationService
 	 */
 	public function __construct(
 		private readonly ReflectionUtils $reflectionUtils,
-		private readonly AnnotationReader $annotationReader,
+		private readonly AnnotationService $annotationService,
 	) {
 	}
 
@@ -47,7 +47,7 @@ class EntityMetadataService {
 	 * @throws Exception
 	 */
 	public function getEntity( string $entityClass ): Entity {
-		$entityAnnotation = $this->annotationReader
+		$entityAnnotation = $this->annotationService
 			->getClassAnnotations( $entityClass, Entity::class )
 			->firstOrNull();
 
@@ -63,7 +63,7 @@ class EntityMetadataService {
 	 */
 	private function mapArgumentToEntityField( Argument $argument, string $entity ): EntityField {
 		/* @var Column $column */
-		$column = $this->annotationReader->getParameterAnnotations(
+		$column = $this->annotationService->getParameterAnnotations(
 			$entity,
 			self::CONSTRUCTOR_METHOD,
 			$argument->name,

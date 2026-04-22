@@ -12,6 +12,7 @@ use ReflectionException;
 use ReflectionMethod;
 use ReflectionParameter;
 use ReflectionProperty;
+use RuntimeException;
 
 /**
  * ReflectionUtils
@@ -72,7 +73,7 @@ class ReflectionUtils {
 	public function getAnnotatedMethods( string $class, string $with = Annotation::class ): Klist {
 		return listFrom( $this->getReflectionClass( $class )->getMethods() )
 			->filter( fn( ReflectionMethod $m ) => listFrom( $m->getAttributes() )
-				->filter( fn( ReflectionAttribute $attribute ) => $attribute->getName() === $with )
+				->filter( fn( ReflectionAttribute $attribute ) => $attribute->newInstance() instanceof $with )
 				->isNotEmpty()
 			);
 	}
@@ -117,10 +118,11 @@ class ReflectionUtils {
 	}
 
 	/**
-	 * Fetches properties annotated with a specific annotation and returns an Argument list.
+	 * Fetches all properties (including inherited ones) annotated with a specific annotation,
+	 * and returns an Argument list for each.
 	 *
-	 * @param string $class
-	 * @param string $annotationClass
+	 * @param class-string<T> $class The class to inspect.
+	 * @param class-string<Annotation> $annotationClass The annotation you’re looking for.
 	 *
 	 * @return Klist<Argument>
 	 * @throws ReflectionException
@@ -143,8 +145,6 @@ class ReflectionUtils {
 	 */
 	public function setPropertyValue( object $instance, string $property, mixed $value ): void {
 		$reflectionProperty = new ReflectionProperty( $instance, $property );
-		/** @psalm-suppress UnusedMethodCall */
-		$reflectionProperty->setAccessible( true );
 		$reflectionProperty->setValue( $instance, $value );
 	}
 
@@ -244,9 +244,9 @@ class ReflectionUtils {
 	 *
 	 * @return Klist<Annotation>
 	 */
-	private function getAnnotations( Klist $attributes, ?string $target, string $annotationClass ): Klist {
+	private function getAnnotations( Klist $attributes, ?int $target, string $annotationClass ): Klist {
 		return $attributes
-			->filter( fn( ReflectionAttribute $attribute ) => $attribute->getTarget() == $target )
+			->filter( fn( ReflectionAttribute $attribute ) => $attribute->getTarget() === $target )
 			->map( fn( ReflectionAttribute $attribute ) => class_exists( $attribute->getName() ) ? $attribute->newInstance() : null )
 			->filter( fn( $annotation ) => $annotation instanceof $annotationClass );
 	}

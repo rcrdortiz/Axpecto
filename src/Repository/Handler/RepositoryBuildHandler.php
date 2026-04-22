@@ -4,6 +4,7 @@ namespace Axpecto\Repository\Handler;
 
 use Axpecto\Annotation\Annotation;
 use Axpecto\Annotation\AnnotationReader;
+use Axpecto\Annotation\AnnotationService;
 use Axpecto\Annotation\BuildAnnotation;
 use Axpecto\ClassBuilder\BuildHandler;
 use Axpecto\ClassBuilder\BuildOutput;
@@ -35,14 +36,14 @@ readonly class RepositoryBuildHandler implements BuildHandler {
 	 * @param MethodCodeGenerator $codeGenerator
 	 * @param RepositoryMethodNameParser $methodNameParser
 	 * @param EntityMetadataService $metadataService
-	 * @param AnnotationReader $annotationReader
+	 * @param AnnotationService $annotationService
 	 */
 	public function __construct(
 		private ReflectionUtils $reflectionUtils,
 		private MethodCodeGenerator $codeGenerator,
 		private RepositoryMethodNameParser $methodNameParser,
 		private EntityMetadataService $metadataService,
-		private AnnotationReader $annotationReader,
+		private AnnotationService $annotationService,
 	) {
 	}
 
@@ -80,7 +81,7 @@ readonly class RepositoryBuildHandler implements BuildHandler {
 	 * @throws ReflectionException
 	 */
 	private function fetchEntityMetadata( Repository $repo ): ?EntityAttribute {
-		return $this->annotationReader
+		return $this->annotationService
 			->getClassAnnotations( $repo->entityClass, EntityAttribute::class )
 			->firstOrNull();
 	}
@@ -178,7 +179,7 @@ readonly class RepositoryBuildHandler implements BuildHandler {
 		$code .= "\t\treturn \$this->" . self::STORAGE_PROP .
 		         "->findAllByCriteria(\$criteria, '$entityClass')\n";
 		$code .= "\t\t    ->map(fn(\$item) => \$this->" .
-		         self::MAPPER_PROP . "->map('$entityClass', \$item));";
+		         self::MAPPER_PROP . "->mapEntityFromArray('$entityClass', \$item));";
 
 		return $code;
 	}

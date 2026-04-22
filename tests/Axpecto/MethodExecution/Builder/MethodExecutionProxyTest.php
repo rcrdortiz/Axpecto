@@ -3,7 +3,7 @@
 namespace Axpecto\MethodExecution\Builder;
 
 use Axpecto\Annotation\Annotation;
-use Axpecto\Annotation\AnnotationReader;
+use Axpecto\Annotation\AnnotationService;
 use Axpecto\Annotation\MethodExecutionAnnotation;
 use Axpecto\Collection\Klist;
 use Axpecto\MethodExecution\MethodExecutionContext;
@@ -13,16 +13,16 @@ use PHPUnit\Framework\TestCase;
 
 class MethodExecutionProxyTest extends TestCase {
 	private ReflectionUtils $reflectionUtilsMock;
-	private AnnotationReader $annotationReaderMock;
+	private AnnotationService $annotationServiceMock;
 	private MethodExecutionProxy $methodExecutionProxy;
 
 	protected function setUp(): void {
 		// Create mock objects for dependencies
 		$this->reflectionUtilsMock  = $this->createMock( ReflectionUtils::class );
-		$this->annotationReaderMock = $this->createMock( AnnotationReader::class );
+		$this->annotationServiceMock = $this->createMock( AnnotationService::class );
 
 		// Instantiate the MethodExecutionProxy with mocked dependencies
-		$this->methodExecutionProxy = new MethodExecutionProxy( $this->reflectionUtilsMock, $this->annotationReaderMock );
+		$this->methodExecutionProxy = new MethodExecutionProxy( $this->reflectionUtilsMock, $this->annotationServiceMock );
 	}
 
 	public function testHandleExecutesMethodWithNoAnnotations(): void {
@@ -36,7 +36,7 @@ class MethodExecutionProxyTest extends TestCase {
 		};
 
 		// Mock empty annotations (no annotations are defined for the method)
-		$this->annotationReaderMock
+		$this->annotationServiceMock
 			->expects( $this->once() )
 			->method( 'getMethodAnnotations' )
 			->with( $class, $method, MethodExecutionAnnotation::class )
@@ -76,7 +76,7 @@ class MethodExecutionProxyTest extends TestCase {
 
 		// Mock annotations (single annotation for the method)
 		$annotations = new Klist( [ $annotationMock ] );
-		$this->annotationReaderMock
+		$this->annotationServiceMock
 			->expects( $this->once() )
 			->method( 'getMethodAnnotations' )
 			->with( $class, $method, MethodExecutionAnnotation::class )
@@ -131,7 +131,7 @@ class MethodExecutionProxyTest extends TestCase {
 
 		// Mock annotations (two annotations for the method)
 		$annotations = new Klist( [ $annotationMock1, $annotationMock2 ] );
-		$this->annotationReaderMock
+		$this->annotationServiceMock
 			->expects( $this->once() )
 			->method( 'getMethodAnnotations' )
 			->with( $class, $method, MethodExecutionAnnotation::class )

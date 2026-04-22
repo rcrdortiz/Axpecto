@@ -4,7 +4,9 @@ namespace Axpecto\MethodExecution\Builder;
 
 use Axpecto\Annotation\BuildAnnotation;
 use Axpecto\ClassBuilder\BuildOutput;
+use Axpecto\Code\AnnotationCodeGenerator;
 use Axpecto\Code\MethodCodeGenerator;
+use Axpecto\Reflection\ReflectionUtils;
 use PHPUnit\Framework\MockObject\Exception;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
@@ -14,15 +16,19 @@ use ReflectionException;
  */
 class MethodExecutionBuildHandlerTest extends TestCase {
 	private MethodCodeGenerator $codeGen;
+	private AnnotationCodeGenerator $annotationCoder;
+	private ReflectionUtils $reflection;
 	private MethodExecutionBuildHandler $handler;
 
 	/**
 	 * @throws Exception
 	 */
 	protected function setUp(): void {
-		// mock the code generator
-		$this->codeGen = $this->createMock( MethodCodeGenerator::class );
-		$this->handler = new MethodExecutionBuildHandler( $this->codeGen );
+		// mock the dependencies
+		$this->codeGen        = $this->createMock( MethodCodeGenerator::class );
+		$this->annotationCoder = $this->createMock( AnnotationCodeGenerator::class );
+		$this->reflection      = $this->createMock( ReflectionUtils::class );
+		$this->handler         = new MethodExecutionBuildHandler( $this->codeGen, $this->annotationCoder, $this->reflection );
 	}
 
 	/**
@@ -43,7 +49,13 @@ class MethodExecutionBuildHandlerTest extends TestCase {
 			->method( 'getAnnotatedMethod' )
 			->willReturn( $methodName );
 
-		// 2) Stub the code generator to return a known signature
+		// 2) Stub reflection to return the real ReflectionMethod (non-abstract)
+		$this->reflection
+			->method( 'getClassMethod' )
+			->with( $className, $methodName )
+			->willReturn( new \ReflectionMethod( $className, $methodName ) );
+
+		// 3) Stub the code generator to return a known signature
 		$this->codeGen
 			->expects( $this->once() )
 			->method( 'implementMethodSignature' )

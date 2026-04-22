@@ -2,7 +2,7 @@
 
 namespace Axpecto\Repository\Handler;
 
-use Axpecto\Annotation\AnnotationReader;
+use Axpecto\Annotation\AnnotationService;
 use Axpecto\Annotation\BuildAnnotation;
 use Axpecto\ClassBuilder\BuildOutput;
 use Axpecto\Code\MethodCodeGenerator;
@@ -25,7 +25,7 @@ class RepositoryBuildHandlerTest extends TestCase {
 	private RepositoryMethodNameParser $parser;
 	private EntityMetadataService $metadata;
 	private RepositoryBuildHandler $handler;
-	private AnnotationReader $annotationReader;
+	private AnnotationService $annotationService;
 
 	/**
 	 * @throws Exception
@@ -35,14 +35,14 @@ class RepositoryBuildHandlerTest extends TestCase {
 		$this->codeGen          = $this->createMock( MethodCodeGenerator::class );
 		$this->parser           = $this->createMock( RepositoryMethodNameParser::class );
 		$this->metadata         = $this->createMock( EntityMetadataService::class );
-		$this->annotationReader = $this->createMock( AnnotationReader::class );
+		$this->annotationService = $this->createMock( AnnotationService::class );
 
 		$this->handler = new RepositoryBuildHandler(
 			$this->reflect,
 			$this->codeGen,
 			$this->parser,
 			$this->metadata,
-			$this->annotationReader,
+			$this->annotationService,
 		);
 	}
 
@@ -62,7 +62,7 @@ class RepositoryBuildHandlerTest extends TestCase {
 
 		// 2) Stub fetching the Entity metadata
 		$entityAnnotation = new Entity( storage: DummyStorage::class, table: 'dummy' );
-		$this->annotationReader
+		$this->annotationService
 			->method( 'getClassAnnotations' )
 			->willReturn( listOf( $entityAnnotation ) );
 

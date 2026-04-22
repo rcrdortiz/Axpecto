@@ -5,167 +5,171 @@ declare( strict_types=1 );
 namespace Axpecto\Annotation;
 
 use Axpecto\Collection\Klist;
-use Axpecto\Container\Container;
 use Axpecto\Reflection\ReflectionUtils;
 use ReflectionAttribute;
 use ReflectionException;
+use ReflectionMethod;
 use ReflectionParameter;
 
 /**
- * Reads PHP8 attributes and turns them into AOP-style Annotation instances,
- * filtering by class vs. method targets and injecting their properties via DI.
+ * AnnotationReader
+ *
+ * Reads PHP 8 attributes and turns them into Annotation instances,
+ * filtering by class, and annotating each instance
+ * with its declaring class and/or method name.
  *
  * @template A of Annotation
  * @psalm-consistent-constructor
  */
 class AnnotationReader {
+	/**
+	 * @param ReflectionUtils $reflection
+	 *   Used to fetch native PHP ReflectionAttribute instances.
+	 */
 	public function __construct(
-		private readonly Container $container,
 		private readonly ReflectionUtils $reflection
 	) {
 	}
 
 	/**
-	 * Fetch all annotations of a given type on a class.
+	 * Fetch all annotations of the given type on a class.
 	 *
-	 * @template T
-	 * @param class-string<T> $class
-	 * @param class-string<A> $annotationClass
+	 * @template T of Annotation
+	 * @param class-string<A> $class
+	 * @param class-string<T> $annotationClass
 	 *
-	 * @return Klist<T>
+	 * @return Klist<T>  A list of instantiated annotations, each with its
+	 *                   ->setAnnotatedClass($class) already applied.
+	 *
 	 * @throws ReflectionException
 	 */
 	public function getClassAnnotations(
 		string $class,
-		string $annotationClass,
+		string $annotationClass
 	): Klist {
-		$raw = $this->reflection->getClassAttributes( $class );
-
-		return $this
-			->filterAndInject( $raw, $annotationClass )
-			->map( fn( Annotation $ann ): Annotation => $ann->setAnnotatedClass( $class ) );
+		return $this->reflection
+			->getClassAttributes( $class )
+			->filter( fn( Annotation $ann ) => $ann instanceof $annotationClass )
+			->map( fn( Annotation $ann ) => $ann->setAnnotatedClass( $class ) );
 	}
 
 	/**
-	 * Fetch all annotations of a given type on a method.
+	 * Fetch all annotations of the given type on a specific method.
 	 *
-	 * @template T
-	 * @param class-string<T> $class
+	 * @template T of Annotation
+	 * @param class-string<A> $class
 	 * @param string $method
-	 * @param class-string<A> $annotationClass
+	 * @param class-string<T> $annotationClass
 	 *
-	 * @return Klist<T>
+	 * @return Klist<T>  A list of instantiated annotations, each with
+	 *                   ->setAnnotatedClass($class)
+	 *                   and ->setAnnotatedMethod($method) applied.
+	 *
 	 * @throws ReflectionException
 	 */
 	public function getMethodAnnotations(
 		string $class,
 		string $method,
-		string $annotationClass,
+		string $annotationClass
 	): Klist {
-		$raw = $this->reflection->getMethodAttributes( $class, $method );
-
-		return $this
-			->filterAndInject( $raw, $annotationClass )
-			->map( fn( Annotation $ann ): Annotation => $ann
+		return $this->reflection
+			->getMethodAttributes( $class, $method )
+			->filter( fn( Annotation $ann ) => $ann instanceof $annotationClass )
+			->map( fn( Annotation $ann ) => $ann
 				->setAnnotatedClass( $class )
 				->setAnnotatedMethod( $method )
 			);
 	}
 
 	/**
-	 * Fetch both class‑level and method‑level annotations of a given type.
+	 * Fetch both class-level and method-level annotations of a given type.
 	 *
-	 * @template T
-	 * @param class-string<T> $class
-	 * @param class-string<A> $annotationClass
+	 * @template T of Annotation
+	 * @param class-string<A> $class
+	 * @param class-string<T> $annotationClass
 	 *
-	 * @return Klist<T>
+	 * @return Klist<T>  All matching annotations on the class itself
+	 *                   and on any of its methods.
+	 *
 	 * @throws ReflectionException
 	 */
 	public function getAllAnnotations(
 		string $class,
-		string $annotationClass = Annotation::class
+		string $annotationClass,
 	): Klist {
-		$classAnns  = $this->getClassAnnotations( $class, $annotationClass );
+		$classAnns = $this->getClassAnnotations( $class, $annotationClass );
+
 		$methodAnns = $this->reflection
 			->getAnnotatedMethods( $class, $annotationClass )
-			->map( fn( \ReflectionMethod $m ) => $this->getMethodAnnotations( $class, $m->getName(), $annotationClass )
-			)
+			->map( fn( ReflectionMethod $m ) => $this->getMethodAnnotations( $class, $m->getName(), $annotationClass ) )
 			->flatten();
 
 		return $classAnns->merge( $methodAnns );
 	}
 
 	/**
-	 * Fetch all annotations of a given type on one of a method’s parameters.
+	 * Fetch all annotations of the given type on a single method parameter.
 	 *
-	 * @template T
-	 * @param class-string<T> $class
+	 * @template T of Annotation
+	 * @param class-string<A> $class
 	 * @param string $method
 	 * @param string $parameterName
-	 * @param class-string<A> $annotationClass
+	 * @param class-string<T> $annotationClass
 	 *
-	 * @return Klist<A>
+	 * @return Klist<T>  A list (possibly empty) of annotations on that parameter,
+	 *                   each with ->setAnnotatedClass() and ->setAnnotatedMethod().
+	 *
 	 * @throws ReflectionException
 	 */
 	public function getParameterAnnotations(
 		string $class,
 		string $method,
 		string $parameterName,
-		string $annotationClass,
+		string $annotationClass
 	): Klist {
-		$parameter = listFrom( $this->reflection->getClassMethod( $class, $method )->getParameters() )
+		$param = listFrom( $this->reflection->getClassMethod( $class, $method )->getParameters() )
 			->filter( fn( ReflectionParameter $p ) => $p->getName() === $parameterName )
 			->firstOrNull();
 
-		if ( ! $parameter ) {
+		if ( $param === null ) {
 			return emptyList();
 		}
 
-		return listFrom( $parameter->getAttributes() )
-			->map( fn( ReflectionAttribute $p ) => $p->newInstance() )
-			->maybe( fn( Klist $attributes ) => $this->filterAndInject( $attributes, $annotationClass ) )
-			->foreach( fn( Annotation $ann ) => $ann->setAnnotatedClass( $class )->setAnnotatedMethod( $method ) );
+		return listFrom( $param->getAttributes() )
+			->map( fn( ReflectionAttribute $attr ) => $attr->newInstance() )
+			->filter( fn( $inst ) => $inst instanceof $annotationClass )
+			->map( fn( Annotation $ann ) => $ann
+				->setAnnotatedClass( $class )
+				->setAnnotatedMethod( $method )
+			);
 	}
 
 	/**
-	 * Fetch a single annotation of a given type on a property.
+	 * Fetch exactly one annotation of the given type on a class property.
 	 *
-	 * @template T
-	 * @param class-string<T> $class
+	 * @template T of Annotation
+	 * @param class-string<object> $class
 	 * @param string $property
-	 * @param class-string<A> $annotationClass
+	 * @param class-string<T> $annotationClass
 	 *
-	 * @return A|null
+	 * @return T The first matching annotation, or null if none.
+	 *
 	 * @throws ReflectionException
 	 */
 	public function getPropertyAnnotation(
 		string $class,
 		string $property,
 		string $annotationClass = Annotation::class
-	): mixed {
-		$attributes = $this->reflection
+	): ?Annotation {
+		$attrs = $this->reflection
 			->getReflectionClass( $class )
 			->getProperty( $property )
 			->getAttributes();
 
-		return listFrom( $attributes )
-			->map( fn( ReflectionAttribute $a ) => $a->newInstance() )
-			->maybe( fn( Klist $attributes ) => $this->filterAndInject( $attributes, $annotationClass ) )
+		return listFrom( $attrs )
+			->map( fn( ReflectionAttribute $attr ) => $attr->newInstance() )
+			->filter( fn( $inst ) => $inst instanceof $annotationClass )
 			->firstOrNull()
 			?->setAnnotatedClass( $class );
-	}
-
-	/**
-	 * @template T of Annotation
-	 * @param Klist<Annotation> $instances
-	 * @param class-string<T> $annotationClass
-	 *
-	 * @return Klist<T>
-	 */
-	private function filterAndInject( Klist $instances, string $annotationClass ): Klist {
-		return $instances
-			->filter( fn( $i ) => is_a( $i, $annotationClass, true ) )
-			->foreach( fn( Annotation $ann ) => $this->container->applyPropertyInjection( $ann ) );
 	}
 }

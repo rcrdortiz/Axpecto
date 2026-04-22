@@ -21,9 +21,9 @@ interface MethodExecutionHandler {
 	 * based on the annotation and execution context. Subclasses should override this method to
 	 * provide custom behavior during method execution.
 	 *
-	 * @param MethodExecutionContext $methodExecutionContext The context of the method being executed.
+	 * @param MethodExecutionContext $context The context of the method being executed.
 	 *
 	 * @return MethodExecutionContext Modified or original method execution context after interception.
 	 */
-	public function intercept( MethodExecutionContext $methodExecutionContext ): mixed;
+	public function intercept( MethodExecutionContext $context ): mixed;
 }

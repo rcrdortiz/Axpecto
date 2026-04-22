@@ -17,7 +17,7 @@ class MethodCodeGeneratorTest extends TestCase {
 		$this->generator       = new MethodCodeGenerator( $this->reflectionUtils );
 	}
 
-	public function testThrowsWhenNotAbstractOrIsPrivate(): void {
+	public function testGeneratesSignatureForConcretePublicMethod(): void {
 		// Prepare a ReflectionMethod for a concrete (non-abstract) public method
 		$rMethod = new ReflectionMethod( TestClassConcrete::class, 'concreteMethod' );
 		$this->reflectionUtils
@@ -26,10 +26,9 @@ class MethodCodeGeneratorTest extends TestCase {
 			->with( TestClassConcrete::class, 'concreteMethod' )
 			->willReturn( $rMethod );
 
-		$this->expectException( Exception::class );
-		$this->expectExceptionMessage( "Can't implement non-abstract or private method " . TestClassConcrete::class . '::concreteMethod()' );
+		$sig = $this->generator->implementMethodSignature( TestClassConcrete::class, 'concreteMethod' );
 
-		$this->generator->implementMethodSignature( TestClassConcrete::class, 'concreteMethod' );
+		$this->assertSame( 'public function concreteMethod(): void', $sig );
 	}
 
 	public function testGeneratesSignatureForPublicAbstractMethodWithTypes(): void {

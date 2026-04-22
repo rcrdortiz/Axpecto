@@ -23,11 +23,10 @@ class MysqliStatement implements Statement {
 	public function execute( array $params = [] ): bool {
 		if ( ! empty( $params ) ) {
 			$types = $this->getParamTypes( $params );
-			// Prepare an array of references.
-			$bindParams   = [];
-			$bindParams[] = $types;
-			foreach ( $params as $value ) {
-				$bindParams[] = &$value;
+			$values = array_values( $params );
+			$bindParams = [ $types ];
+			for ( $i = 0, $count = count( $values ); $i < $count; $i++ ) {
+				$bindParams[] = &$values[ $i ];
 			}
 			if ( ! call_user_func_array( [ $this->stmt, 'bind_param' ], $bindParams ) ) {
 				throw new Exception( "Mysqli bind_param failed: " . $this->stmt->error );
