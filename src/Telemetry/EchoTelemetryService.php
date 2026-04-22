@@ -18,7 +18,6 @@ class EchoTelemetryService implements TelemetryService {
 		array $payload = [],
 		?DateTimeInterface $timestamp = null
 	): void {
-		$when = $timestamp?->format( 'c' ) ?? ( new DateTimeImmutable() )->format( 'c' );
 		echo $this->getCurrentTime() . "[Telemetry][Event] $name\n";
 		if ( $this->context['verbose'] ?? false ) {
 			var_dump( $payload );
@@ -80,9 +79,7 @@ class EchoTelemetryService implements TelemetryService {
 
 	public function unsetContext( string $key ): void {
 		echo "[Telemetry][Context:unset] {$key}\n";
-		if ( isset( $this->context[ $key ] ) ) {
-			unset( $this->context[ $key ] );
-		}
+		unset( $this->context[ $key ] );
 	}
 
 	public function flush(): void {

@@ -106,7 +106,7 @@ class ClassBuilder {
 			$traits = "\tuse " . $buildOutput->traits->join( "," ) . ';';
 		}
 
-		$methods = $buildOutput->methods->map( fn( $method, $code ) => [ $method => $buildOutput->getMethodAnnotations( $method )->join() . $code ] );
+		$methods = $buildOutput->methods->map( fn( $method, $code ) => $buildOutput->getMethodAnnotations( $method )->join() . $code );
 
 		// Construct the full class definition.
 		$proxiedClass = sprintf(

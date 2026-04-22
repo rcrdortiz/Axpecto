@@ -88,7 +88,7 @@ class AnnotationCodeGenerator {
 				return var_export( $v, true );
 			}
 
-			return $v ? 'true' : ( $v === false ? 'false' : (string) $v );
+			return $v === true ? 'true' : ( $v === false ? 'false' : (string) $v );
 		}
 
 		// nested attribute?

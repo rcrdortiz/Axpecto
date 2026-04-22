@@ -2,7 +2,7 @@
 
 namespace Axpecto\Storage\Entity\Tests;
 
-use Axpecto\Annotation\AnnotationReader;
+use Axpecto\Annotation\AnnotationService;
 use Axpecto\Collection\Klist;
 use Axpecto\Reflection\Dto\Argument;
 use Axpecto\Reflection\ReflectionUtils;
@@ -15,13 +15,13 @@ use Exception;
 
 class EntityMetadataServiceTest extends TestCase {
 	private ReflectionUtils $reflect;
-	private AnnotationReader $reader;
+	private AnnotationService $annotationService;
 	private EntityMetadataService $svc;
 
 	protected function setUp(): void {
-		$this->reflect = $this->createMock( ReflectionUtils::class );
-		$this->reader  = $this->createMock( AnnotationReader::class );
-		$this->svc     = new EntityMetadataService( $this->reflect, $this->reader );
+		$this->reflect            = $this->createMock( ReflectionUtils::class );
+		$this->annotationService  = $this->createMock( AnnotationService::class );
+		$this->svc                = new EntityMetadataService( $this->reflect, $this->annotationService );
 	}
 
 	/**
@@ -54,7 +54,7 @@ class EntityMetadataServiceTest extends TestCase {
 		);
 
 		// Stub getParameterAnnotations: foo→[$column], bar→[]
-		$this->reader
+		$this->annotationService
 			->expects( $this->exactly( 2 ) )
 			->method( 'getParameterAnnotations' )
 			->willReturnCallback( function (
@@ -105,7 +105,7 @@ class EntityMetadataServiceTest extends TestCase {
 		$entityClass = DummyEntity::class;
 		$entityAnno  = new EntityAttribute( storage: DummyStorage::class, table: 'tbl' );
 
-		$this->reader
+		$this->annotationService
 			->expects( $this->once() )
 			->method( 'getClassAnnotations' )
 			->with( $entityClass, EntityAttribute::class )
@@ -117,7 +117,7 @@ class EntityMetadataServiceTest extends TestCase {
 	public function testGetEntityMissingThrows(): void {
 		$entityClass = DummyEntity::class;
 
-		$this->reader
+		$this->annotationService
 			->expects( $this->once() )
 			->method( 'getClassAnnotations' )
 			->with( $entityClass, EntityAttribute::class )

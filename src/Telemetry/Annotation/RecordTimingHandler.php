@@ -27,7 +27,7 @@ class RecordTimingHandler implements MethodExecutionHandler {
 		$end      = microtime( true );
 		$duration = $end - $start;
 
-		$this->telemetryService->recordTiming( $context->className . '::' . $context->methodName, $duration, $annotation->labels );
+		$this->telemetryService->recordTiming( $context->className . '::' . $context->methodName, $duration * 1000, $annotation->labels );
 
 		return $result;
 	}

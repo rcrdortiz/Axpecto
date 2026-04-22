@@ -145,8 +145,6 @@ class ReflectionUtils {
 	 */
 	public function setPropertyValue( object $instance, string $property, mixed $value ): void {
 		$reflectionProperty = new ReflectionProperty( $instance, $property );
-		/** @psalm-suppress UnusedMethodCall */
-		$reflectionProperty->setAccessible( true );
 		$reflectionProperty->setValue( $instance, $value );
 	}
 
@@ -246,9 +244,9 @@ class ReflectionUtils {
 	 *
 	 * @return Klist<Annotation>
 	 */
-	private function getAnnotations( Klist $attributes, ?string $target, string $annotationClass ): Klist {
+	private function getAnnotations( Klist $attributes, ?int $target, string $annotationClass ): Klist {
 		return $attributes
-			->filter( fn( ReflectionAttribute $attribute ) => $attribute->getTarget() == $target )
+			->filter( fn( ReflectionAttribute $attribute ) => $attribute->getTarget() === $target )
 			->map( fn( ReflectionAttribute $attribute ) => class_exists( $attribute->getName() ) ? $attribute->newInstance() : null )
 			->filter( fn( $annotation ) => $annotation instanceof $annotationClass );
 	}

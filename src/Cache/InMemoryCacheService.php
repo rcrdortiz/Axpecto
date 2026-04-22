@@ -25,7 +25,7 @@ class InMemoryCacheService implements CacheService {
 	 * @var array<string, array<string, array{value: mixed, expiresAt: DateTimeImmutable|null}>>
 	 */
 	private array $store = [];
-	private bool $telemetryEnabled;
+	private bool $telemetryEnabled = false;
 
 	public function __construct(
 		private readonly TelemetryService $telemetryService,

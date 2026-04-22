@@ -114,9 +114,11 @@ class AnnotationService {
 		string $class,
 		string $property,
 		string $annotationClass = Annotation::class
-	): mixed {
+	): ?Annotation {
 		$annotation = $this->reader->getPropertyAnnotation( $class, $property, $annotationClass );
-		$this->dependencyResolver->applyPropertyInjection( $annotation );
+		if ( $annotation !== null ) {
+			$this->dependencyResolver->applyPropertyInjection( $annotation );
+		}
 
 		return $annotation;
 	}

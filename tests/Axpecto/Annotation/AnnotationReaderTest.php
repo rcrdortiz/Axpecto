@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Axpecto\Annotation;
 
 use Axpecto\Collection\Klist;
-use Axpecto\Container\Container;
 use Axpecto\Reflection\ReflectionUtils;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
@@ -19,14 +18,12 @@ use ReflectionProperty;
 class AnnotationReaderTest extends TestCase
 {
 	private ReflectionUtils   $reflect;
-	private Container         $container;
 	private AnnotationReader  $reader;
 
 	protected function setUp(): void
 	{
 		$this->reflect   = $this->createMock(ReflectionUtils::class);
-		$this->container = $this->createMock(Container::class);
-		$this->reader    = new AnnotationReader($this->container, $this->reflect);
+		$this->reader    = new AnnotationReader($this->reflect);
 	}
 
 	public function testGetClassAnnotationsFiltersByTypeAndInjects(): void
@@ -40,12 +37,6 @@ class AnnotationReaderTest extends TestCase
 			->method('getClassAttributes')
 			->with($class)
 			->willReturn(listOf($good, $bad));
-
-		// only $good should be injected
-		$this->container
-			->expects($this->once())
-			->method('applyPropertyInjection')
-			->with($good);
 
 		$good
 			->expects($this->once())
@@ -71,11 +62,6 @@ class AnnotationReaderTest extends TestCase
 			->method('getMethodAttributes')
 			->with($class, $method)
 			->willReturn(listOf($ann));
-
-		$this->container
-			->expects($this->once())
-			->method('applyPropertyInjection')
-			->with($ann);
 
 		$ann
 			->expects($this->once())
@@ -106,7 +92,6 @@ class AnnotationReaderTest extends TestCase
 			->with($class)
 			->willReturn(listOf($c1));
 		$c1->method('setAnnotatedClass')->willReturnSelf();
-		$this->container->method('applyPropertyInjection')->willReturnCallback(fn($a) => $a);
 
 		// method list
 		$methodRef = new ReflectionMethod(TestSubject::class, 'bar');

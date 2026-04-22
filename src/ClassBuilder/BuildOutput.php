@@ -27,7 +27,6 @@ class BuildOutput {
 
 	/**
 	 * Constructor for the BuildOutput class.
-	 **
 	 *
 	 * @param Kmap $methods List of methods in the output.
 	 * @param Kmap $properties List of class properties in the output.

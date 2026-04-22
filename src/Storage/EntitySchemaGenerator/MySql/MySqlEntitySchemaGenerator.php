@@ -39,7 +39,7 @@ class MySqlEntitySchemaGenerator {
 		}
 	}
 
-	private function isTableCreated( $tableName ) {
+	private function isTableCreated( string $tableName ): bool {
 		$sql  = "SHOW TABLES LIKE '$tableName'";
 		$stmt = $this->connection->prepare( $sql );
 		$stmt->execute();
@@ -47,7 +47,7 @@ class MySqlEntitySchemaGenerator {
 		return $stmt->rowCount() > 0;
 	}
 
-	public function destroy( string $entityClass ) {
+	public function destroy( string $entityClass ): void {
 		$entity = $this->metadataService->getEntity( $entityClass );
 
 		$stmt = $this->connection->prepare( "DROP TABLE IF EXISTS {$entity->table}" );

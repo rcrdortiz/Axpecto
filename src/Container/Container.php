@@ -69,7 +69,7 @@ class Container {
 			return $this->singletons[ $id ];
 		}
 
-		// Do we hava a value stored for it
+		// Do we have a value stored for it
 		if ( isset( $this->values[ $id ] ) ) {
 			return $this->values[ $id ];
 		}
@@ -77,11 +77,14 @@ class Container {
 		// Check for a concrete binding or fallback to the id
 		$type = $this->bindings[ $id ] ?? $id;
 
-		// Build class
-		$className = $this->builder->build( $type );
+		// Check if the resolved type already has a singleton
+		if ( $type !== $id && isset( $this->singletons[ $type ] ) ) {
+			return $this->singletons[ $type ];
+		}
 
-		// Autowire the class
+		// Build and autowire the class
 		try {
+			$className = $this->builder->build( $type );
 			$this->guard->enter( $className );
 			$instance = $this->resolver->autowire( $className );
 			$this->resolver->applyPropertyInjection( $instance );
@@ -91,7 +94,7 @@ class Container {
 			return $instance;
 		} catch ( ReflectionException $e ) {
 			// Map a generic ReflectionException to a more specific one.
-			throw new AutowireDependencyException( $className, $type, $e );
+			throw new AutowireDependencyException( $type, $type, $e );
 		}
 	}
 }
